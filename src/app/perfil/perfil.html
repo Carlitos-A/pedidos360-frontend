@@ -1,0 +1,28 @@
+<h1>Mi perfil</h1>
+
+<p><strong>Nombre:</strong> {{ nombre() }}</p>
+<p><strong>Correo:</strong> {{ correo() }}</p>
+
+<h2>Roles asignados</h2>
+@if (roles().length > 0) {
+  <ul>
+    @for (rol of roles(); track rol) {
+      <li><strong>{{ rol }}</strong></li>
+    }
+  </ul>
+} @else {
+  <p>Sin roles asignados en Entra ID.</p>
+}
+
+<h2>Scopes del token</h2>
+@if (scopes().length > 0) {
+  <ul>
+    @for (scope of scopes(); track scope) {
+      <li><code>{{ scope }}</code></li>
+    }
+  </ul>
+} @else {
+  <p>Sin scopes en el token.</p>
+}
+
+<p class="fuente">Roles y scopes leídos desde los claims del access token (el que viaja al API).</p>

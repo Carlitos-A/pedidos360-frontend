@@ -1,0 +1,43 @@
+.hero {
+  text-align: center;
+  padding: 4.5rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.hero .logo {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero p {
+  max-width: 520px;
+  margin: 0.5rem auto;
+  color: var(--muted);
+  font-size: 1.02rem;
+}
+
+.hero .hint {
+  display: inline-block;
+  margin-top: 1.25rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  background: #eef3fe;
+  border: 1px solid #d9e4fb;
+  color: var(--primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+}

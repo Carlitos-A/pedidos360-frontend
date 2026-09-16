@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.page-head p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+pre {
+  margin-top: 1.25rem;
+}

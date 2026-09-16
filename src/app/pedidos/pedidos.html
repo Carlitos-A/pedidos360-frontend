@@ -1,0 +1,19 @@
+<section class="card">
+  <div class="page-head">
+    <div>
+      <h1>Pedidos</h1>
+      <p>Estos datos vienen del API protegida con JWT (API Gateway + backend Spring Boot).</p>
+    </div>
+    <button (click)="cargarPedidos()" [disabled]="cargando()">
+      {{ cargando() ? 'Cargando...' : 'Cargar pedidos' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (pedidos()) {
+    <pre>{{ pedidos() | json }}</pre>
+  }
+</section>

@@ -1,0 +1,11 @@
+.fuente {
+  color: #5a6478;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+}
+
+code {
+  background: #eef1f7;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
