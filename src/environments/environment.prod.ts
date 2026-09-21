@@ -10,8 +10,8 @@ export const environment = {
     clientId: 'fc50b5a6-c939-4a31-83c4-02fb87246356',
     // Directory (tenant) ID de tu directorio de Entra ID
     authority: 'https://login.microsoftonline.com/bb5324af-c266-41ed-b36c-a971641c7af2',
-    // URL del sitio en S3 (también registrada como redirect URI SPA en Entra ID)
-    redirectUri: 'http://pedidos360-front-carlitos-a.s3-website-us-east-1.amazonaws.com',
+    // URL del sitio en GitHub Pages (también registrada como redirect URI SPA en Entra ID)
+    redirectUri: 'https://carlitos-a.github.io/pedidos360-frontend/',
   },
 
   apiConfig: {
