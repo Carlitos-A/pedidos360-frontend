@@ -1,4 +1,6 @@
-
+// ============================================================
+// CONFIGURACIÓN PEDIDOS360 — Desarrollo local
+// ============================================================
 export const environment = {
   production: false,
 
@@ -11,9 +13,10 @@ export const environment = {
   },
 
   apiConfig: {
-    // URL del API: en local apunta al pedidos-service (Spring Boot).
-    // Cuando despliegues, se reemplaza por la URL del API Gateway.
-    uri: 'http://localhost:8081',
+    // URLs locales de los microservicios.
+    // En producción (API Gateway) ambas apuntan al Gateway.
+    pedidosUri: 'http://localhost:8081',
+    productosUri: 'http://localhost:8082',
     // Scope expuesto en la app "Pedidos360-API" (Expose an API)
     scopes: ['api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d/pedidos.read'],
   },

@@ -1,0 +1,67 @@
+<section class="card">
+  <div class="page-head">
+    <div>
+      <h1>Productos</h1>
+      <p>Catálogo servido por el microservicio <code>productos-service</code> (puerto 8082), protegido con JWT.</p>
+    </div>
+    <button (click)="cargarProductos()" [disabled]="cargando()">
+      {{ cargando() ? 'Cargando...' : 'Recargar' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="hint">Consultando el API...</p>
+  } @else if (productos().length === 0) {
+    <p class="hint">No hay productos registrados.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Precio</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of productos(); track p.id) {
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.categoria }}</td>
+            <td>${{ p.precio | number:'1.0-0' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (esAdmin()) {
+    <h2>Nuevo producto <small>(solo Admin)</small></h2>
+    <form #form="ngForm" (ngSubmit)="crearProducto()" class="form-grid">
+      <label>
+        Nombre
+        <input name="nombre" [(ngModel)]="nuevoProducto.nombre" required />
+      </label>
+      <label>
+        Categoría
+        <input name="categoria" [(ngModel)]="nuevoProducto.categoria" required />
+      </label>
+      <label>
+        Precio
+        <input name="precio" type="number" min="1" [(ngModel)]="nuevoProducto.precio" required />
+      </label>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid || guardando()">
+          {{ guardando() ? 'Guardando...' : 'Crear producto' }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    <p class="hint">Tu rol es Cliente: puedes ver productos, pero solo un Admin puede crearlos.</p>
+  }
+</section>

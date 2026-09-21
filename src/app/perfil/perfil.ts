@@ -1,11 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { KeyValuePipe } from '@angular/common';
 import { MsalService } from '@azure/msal-angular';
 import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-perfil',
-  imports: [KeyValuePipe],
+  imports: [],
   templateUrl: './perfil.html',
   styleUrl: './perfil.css',
 })

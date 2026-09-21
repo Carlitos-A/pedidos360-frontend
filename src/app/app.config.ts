@@ -54,7 +54,8 @@ export function MSALGuardConfigFactory(): MsalGuardConfiguration {
 // Configuración del Interceptor: adjunta el JWT solo a las llamadas al API
 export function MSALInterceptorConfigFactory(): MsalInterceptorConfiguration {
   const protectedResourceMap = new Map<string, Array<string>>();
-  protectedResourceMap.set(`${environment.apiConfig.uri}/*`, environment.apiConfig.scopes);
+  protectedResourceMap.set(`${environment.apiConfig.pedidosUri}/*`, environment.apiConfig.scopes);
+  protectedResourceMap.set(`${environment.apiConfig.productosUri}/*`, environment.apiConfig.scopes);
 
   return {
     interactionType: InteractionType.Redirect,

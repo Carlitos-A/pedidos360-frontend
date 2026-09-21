@@ -23,15 +23,35 @@ export class App implements OnInit {
         if (result?.account) {
           this.msal.instance.setActiveAccount(result.account);
         }
+        this.cleanUrl();
         this.refreshLoginDisplay();
       },
-      error: (error) => console.error('Error en el redirect de login:', error),
+      error: (error) => {
+        console.error('Error en el redirect de login:', error);
+        // Autorrecuperación: si el estado guardado no coincide (state_mismatch)
+        // o el código expiró, limpiamos el caché de MSAL y la URL,
+        // dejando la app lista para un nuevo intento de login.
+        this.msal.instance.clearCache();
+        this.cleanUrl();
+        this.refreshLoginDisplay();
+      },
     });
 
     // Actualiza la barra cuando cambia el estado de autenticación
     this.msalBroadcast.inProgress$
       .pipe(filter((status) => status === InteractionStatus.None))
       .subscribe(() => this.refreshLoginDisplay());
+  }
+
+  /**
+   * Quita el ?code=...&state=... de la barra de direcciones después
+   * de procesar el retorno del login. Evita que una recarga intente
+   * procesar el mismo código dos veces (causa del state_mismatch).
+   */
+  private cleanUrl(): void {
+    if (window.location.search || window.location.hash.includes('code=')) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }
 
   login(): void {

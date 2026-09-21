@@ -1,44 +1,43 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PedidosService } from '../services/pedidos.service';
+import { ProductosService } from '../services/productos.service';
 import { AuthService } from '../services/auth.service';
-import { Pedido } from '../models/pedido';
+import { Producto } from '../models/producto';
 
 @Component({
-  selector: 'app-pedidos',
-  imports: [DatePipe, DecimalPipe, FormsModule],
-  templateUrl: './pedidos.html',
-  styleUrl: './pedidos.css',
+  selector: 'app-productos',
+  imports: [DecimalPipe, FormsModule],
+  templateUrl: './productos.html',
+  styleUrl: './productos.css',
 })
-export class Pedidos implements OnInit {
-  private readonly pedidosService = inject(PedidosService);
+export class Productos implements OnInit {
+  private readonly productosService = inject(ProductosService);
   private readonly auth = inject(AuthService);
 
-  protected readonly pedidos = signal<Pedido[]>([]);
+  protected readonly productos = signal<Producto[]>([]);
   protected readonly error = signal<string>('');
   protected readonly cargando = signal(false);
   protected readonly guardando = signal(false);
   protected readonly esAdmin = signal(false);
 
-  protected readonly estados = ['PENDIENTE', 'EN_PREPARACION', 'ENTREGADO'];
-  protected nuevoPedido: Pedido = this.pedidoVacio();
+  protected nuevoProducto: Producto = this.productoVacio();
 
   ngOnInit(): void {
-    this.cargarPedidos();
-    // POST /pedidos es solo para Admin: el formulario se muestra según el rol del token
+    this.cargarProductos();
+    // POST /productos es solo para Admin: el formulario se muestra según el rol del token
     this.auth.esAdmin().subscribe((esAdmin) => this.esAdmin.set(esAdmin));
   }
 
-  cargarPedidos(): void {
+  cargarProductos(): void {
     this.cargando.set(true);
-    this.pedidos.set([]);
+    this.productos.set([]);
     this.error.set('');
 
     // El MsalInterceptor adjunta automáticamente el JWT en esta llamada
-    this.pedidosService.listar().subscribe({
+    this.productosService.listar().subscribe({
       next: (data) => {
-        this.pedidos.set(data);
+        this.productos.set(data);
         this.cargando.set(false);
       },
       error: (err) => {
@@ -48,21 +47,15 @@ export class Pedidos implements OnInit {
     });
   }
 
-  crearPedido(): void {
+  crearProducto(): void {
     this.guardando.set(true);
     this.error.set('');
 
-    // El LocalDateTime del backend espera ISO sin zona: "yyyy-MM-ddTHH:mm:ss" (hora local)
-    const ahora = new Date();
-    const fecha = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 19);
-
-    this.pedidosService.crear({ ...this.nuevoPedido, fecha }).subscribe({
+    this.productosService.crear({ ...this.nuevoProducto }).subscribe({
       next: () => {
-        this.nuevoPedido = this.pedidoVacio();
+        this.nuevoProducto = this.productoVacio();
         this.guardando.set(false);
-        this.cargarPedidos();
+        this.cargarProductos();
       },
       error: (err) => {
         this.error.set(this.describirError(err));
@@ -71,8 +64,8 @@ export class Pedidos implements OnInit {
     });
   }
 
-  private pedidoVacio(): Pedido {
-    return { cliente: '', detalle: '', total: 0, estado: 'PENDIENTE' };
+  private productoVacio(): Producto {
+    return { nombre: '', categoria: '', precio: 0 };
   }
 
   private describirError(err: { status?: number; statusText?: string }): string {
