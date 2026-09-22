@@ -17,7 +17,6 @@ de pedidos y productos, consumiendo los microservicios Spring Boot del
 
 - Angular 22
 - TypeScript
-- Vitest (tests unitarios)
 
 ## Estructura
 
