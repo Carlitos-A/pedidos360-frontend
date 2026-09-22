@@ -1,59 +1,61 @@
-# Pedidos360Front
+# Pedidos360 — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.8.
+Frontend Angular del sistema Pedidos360 (EP1 · DSY1107). Interfaz para gestión
+de pedidos y productos, consumiendo los microservicios Spring Boot del
+[backend](https://github.com/Carlitos-A/pedidos360-backend) mediante API REST.
 
-## Development server
+## Funcionalidades
 
-To start a local development server, run:
+- **Catálogo de productos** — listado de `productos-service` (puerto 8082).
+- **Pedidos** — creación y listado de pedidos contra `pedidos-service` (puerto 8081).
+- **Autenticación con Microsoft Entra ID** — inicio de sesión con cuentas
+  organizacionales; el frontend obtiene el JWT y lo envía en cada request.
+- **Autorización por rol** — la UI adapta las acciones según el rol del
+  usuario (`Admin` / `Cliente`): ver y crear según permisos.
+
+## Tecnologías
+
+- Angular 22
+- TypeScript
+- Vitest (tests unitarios)
+
+## Estructura
+
+```text
+src/app/
+├─ home/         # Página principal
+├─ pedidos/      # Módulo de pedidos
+├─ productos/    # Módulo de productos
+├─ perfil/       # Perfil del usuario autenticado
+├─ services/     # Servicios HTTP y de autenticación
+├─ models/       # Modelos de datos
+└─ environments/ # Configuración por ambiente
+```
+
+## Requisitos
+
+- Node.js LTS
+- Backend de Pedidos360 corriendo (ver repositorio del backend)
+
+## Configuración
+
+1. Instalar dependencias: `npm install`
+2. En `src/environments/environment.ts`, configurar los IDs de la aplicación
+   de Microsoft Entra ID (client ID, tenant/authority) y las URLs de los
+   servicios backend.
+
+## Ejecutar
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+La aplicación queda disponible en `http://localhost:4200/` (CORS ya habilitado
+en el backend para ese origen).
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Tests
 
 ```bash
-ng generate --help
+ng test    # unitarios (Vitest)
+ng e2e     # end-to-end
 ```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
