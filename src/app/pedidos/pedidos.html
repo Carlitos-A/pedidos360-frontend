@@ -13,6 +13,24 @@
     <p class="error">{{ error() }}</p>
   }
 
+  @if (pedidoCreado(); as creado) {
+    <section class="flow-summary" aria-live="polite">
+      <h2>Pedido #{{ creado.id }} creado</h2>
+      <p>La API respondió correctamente. Usa el ID {{ creado.id }} para seguir este pedido en los logs del backend.</p>
+      <ol class="flow-steps">
+        <li>El frontend envió el JWT y el pedido a través de API Gateway.</li>
+        <li><code>pedidos-service</code> guardó el pedido en MySQL y publicó tres mensajes en RabbitMQ.</li>
+        <li>Los consumidores de notificación, ticket y auditoría registran su resultado y confirman cada mensaje con ACK.</li>
+      </ol>
+      <div class="flow-routes" aria-label="Rutas de mensajería del pedido">
+        <span><strong>Direct</strong> → notificación → DLQ si falla</span>
+        <span><strong>Topic</strong> → ticket → DLQ si falla</span>
+        <span><strong>Topic</strong> → auditoría → DLQ si falla</span>
+      </div>
+      <p class="flow-note">Este panel explica la ruta configurada. La recepción y el ACK se verifican en los logs y en RabbitMQ.</p>
+    </section>
+  }
+
   @if (cargando()) {
     <p class="hint">Consultando el API...</p>
   } @else if (pedidos().length === 0) {

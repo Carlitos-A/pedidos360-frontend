@@ -30,6 +30,49 @@ pre {
   color: var(--primary);
 }
 
+.flow-summary {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #b7d8c4;
+  border-radius: 10px;
+  background: #f1faf4;
+}
+
+.flow-summary h2 {
+  margin: 0 0 0.5rem;
+  color: #1d6440;
+}
+
+.flow-summary p {
+  margin: 0.35rem 0 0.7rem;
+}
+
+.flow-steps {
+  margin: 0.5rem 0 0.9rem;
+  padding-left: 1.3rem;
+  line-height: 1.5;
+}
+
+.flow-routes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.flow-routes span {
+  padding: 0.55rem 0.7rem;
+  border-radius: 7px;
+  background: #fff;
+  border: 1px solid #cfe7d6;
+  font-size: 0.85rem;
+}
+
+.flow-summary .flow-note {
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

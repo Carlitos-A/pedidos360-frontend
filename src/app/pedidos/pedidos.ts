@@ -20,6 +20,7 @@ export class Pedidos implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly guardando = signal(false);
   protected readonly esAdmin = signal(false);
+  protected readonly pedidoCreado = signal<Pedido | null>(null);
 
   protected readonly estados = ['PENDIENTE', 'EN_PREPARACION', 'ENTREGADO'];
   protected nuevoPedido: Pedido = this.pedidoVacio();
@@ -51,6 +52,7 @@ export class Pedidos implements OnInit {
   crearPedido(): void {
     this.guardando.set(true);
     this.error.set('');
+    this.pedidoCreado.set(null);
 
     // El LocalDateTime del backend espera ISO sin zona: "yyyy-MM-ddTHH:mm:ss" (hora local)
     const ahora = new Date();
@@ -59,7 +61,8 @@ export class Pedidos implements OnInit {
       .slice(0, 19);
 
     this.pedidosService.crear({ ...this.nuevoPedido, fecha }).subscribe({
-      next: () => {
+      next: (pedido) => {
+        this.pedidoCreado.set(pedido);
         this.nuevoPedido = this.pedidoVacio();
         this.guardando.set(false);
         this.cargarPedidos();
@@ -81,6 +84,9 @@ export class Pedidos implements OnInit {
     }
     if (err.status === 403) {
       return 'Error 403: tu rol no tiene permiso para esta operación (crear es solo para Admin).';
+    }
+    if (err.status === 503) {
+      return 'Error 503: el API no está disponible. Revisa la integración del API Gateway en AWS.';
     }
     return `Error ${err.status ?? ''}: ${err.statusText || 'No se pudo conectar con el API'}`;
   }
