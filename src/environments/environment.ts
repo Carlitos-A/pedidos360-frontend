@@ -1,23 +1,23 @@
-// ============================================================
-// CONFIGURACIÓN PEDIDOS360 — Desarrollo local
-// ============================================================
 export const environment = {
   production: false,
-
+  // Único API Manager; conserva el gateway ya configurado.
+  apiBaseUrl: 'https://4r80bd3omi.execute-api.us-east-1.amazonaws.com',
   msalConfig: {
-    // Application (client) ID de la app "Pedidos360-Frontend"
     clientId: 'fc50b5a6-c939-4a31-83c4-02fb87246356',
-    // Directory (tenant) ID de tu directorio de Entra ID
+    tenantId: 'bb5324af-c266-41ed-b36c-a971641c7af2',
     authority: 'https://login.microsoftonline.com/bb5324af-c266-41ed-b36c-a971641c7af2',
-    redirectUri: 'http://localhost:4200',
+    redirectUri: 'http://localhost:4200/auth/callback',
+    postLogoutRedirectUri: 'http://localhost:4200/login',
   },
-
-  apiConfig: {
-    // URLs locales de los microservicios.
-    // En producción (API Gateway) ambas apuntan al Gateway.
-    pedidosUri: 'http://localhost:8081',
-    productosUri: 'http://localhost:8082',
-    // Scope expuesto en la app "Pedidos360-API" (Expose an API)
-    scopes: ['api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d/pedidos.read'],
-  },
+  apiConfig: { scopes: ['api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d/pedidos.read'] },
+  reportsPollingMs: 30000,
+  healthServices: [
+    { key: 'bff', label: 'ms-pedidos360-bff' },
+    { key: 'orders', label: 'ms-pedidos360-orders' },
+    { key: 'products', label: 'ms-pedidos360-products' },
+    { key: 'report', label: 'ms-pedidos360-report' },
+    { key: 'audit', label: 'ms-pedidos360-audit' },
+  ],
+  consoles: { apiManager: '', identity: 'https://entra.microsoft.com', rabbitMq: '', kafka: '' },
+  jwtInspectorUrl: 'https://jwt.ms',
 };

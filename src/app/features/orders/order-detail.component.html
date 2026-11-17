@@ -1,0 +1,205 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">PEDIDOS</p>
+    <h1>{{ isNew() ? 'Nuevo pedido' : 'Detalle de pedido' }}</h1>
+    <p class="muted">
+      {{
+        isNew()
+          ? 'Registra un pedido y asígnalo a la cuenta de su cliente.'
+          : 'Información, seguimiento e historial del pedido.'
+      }}
+    </p>
+  </div>
+  <a routerLink="/orders" class="button secondary">Volver al listado</a>
+</div>
+<app-load-state [loading]="loading()" [error]="loadError()" (retry)="load()">
+  <div class="two-columns">
+    <section class="card">
+      <div class="section-heading">
+        <h2>{{ isNew() ? 'Datos del pedido' : 'Pedido #' + order()?.id }}</h2>
+        @if (order(); as current) {
+          <app-order-status-badge [status]="current.status" />
+        }
+      </div>
+      @if (error()) {
+        <div class="error" role="alert">
+          {{ error() }} <span>Revisa los datos y vuelve a intentar la acción.</span>
+        </div>
+      }
+      @if (success()) {
+        <p class="success" role="status">{{ success() }}</p>
+      }
+      @if (auth.hasRole('Admin')) {
+        <form #orderForm="ngForm" class="form-grid" (ngSubmit)="save()">
+          <label
+            >Cliente<input
+              name="customerName"
+              [(ngModel)]="form.customerName"
+              required
+              maxlength="200"
+          /></label>
+          @if (!isNew()) {
+            <label
+              >Fecha de creación<input [value]="order()?.createdAt | localDate: true" readonly
+            /></label>
+          }
+          <label class="span-2"
+            >Cuenta del cliente (ID de Entra)<input
+              name="customerId"
+              [(ngModel)]="form.customerId"
+              required
+              placeholder="ID de objeto del usuario en Microsoft Entra ID"
+          /></label>
+          <label class="span-2"
+            >Detalle<textarea
+              name="detail"
+              [(ngModel)]="form.detail"
+              required
+              maxlength="2000"
+            ></textarea>
+          </label>
+          <label
+            >Total (CLP)<input
+              name="total"
+              type="number"
+              min="0"
+              step="1"
+              [(ngModel)]="form.total"
+              [readonly]="!!form.items?.length"
+              required
+          /></label>
+          <div class="span-2 stack">
+            <div class="section-heading">
+              <div>
+                <h3>Productos del pedido</h3>
+                <p>Opcional. El total se calcula con las cantidades y precios.</p>
+              </div>
+              <button type="button" class="secondary compact" (click)="addItem()">
+                + Agregar producto
+              </button>
+            </div>
+            @for (item of form.items; track $index; let i = $index) {
+              <div class="form-grid">
+                <label
+                  >Código del producto<input
+                    [name]="'productId' + i"
+                    [(ngModel)]="item.productId"
+                    required
+                /></label>
+                <label
+                  >Nombre<input [name]="'itemName' + i" [(ngModel)]="item.name" required
+                /></label>
+                <label
+                  >Cantidad<input
+                    type="number"
+                    min="1"
+                    step="1"
+                    [name]="'quantity' + i"
+                    [(ngModel)]="item.quantity"
+                    (ngModelChange)="recalculate()"
+                    required
+                /></label>
+                <label
+                  >Precio unitario (CLP)<input
+                    type="number"
+                    min="0"
+                    step="1"
+                    [name]="'unitPrice' + i"
+                    [(ngModel)]="item.unitPrice"
+                    (ngModelChange)="recalculate()"
+                    required
+                /></label>
+                <button class="secondary compact" type="button" (click)="removeItem(i)">
+                  Quitar producto
+                </button>
+              </div>
+            }
+          </div>
+          <div class="actions span-2">
+            <button [disabled]="orderForm.invalid || saving()">
+              {{ saving() ? 'Guardando…' : isNew() ? 'Crear pedido' : 'Guardar cambios' }}
+            </button>
+          </div>
+        </form>
+        @if (!isNew()) {
+          <hr class="section-divider" />
+          <form id="change-status" class="form-stack" (ngSubmit)="changeStatus()">
+            <h3>Cambiar estado</h3>
+            @if (transitions().length) {
+              <label
+                >Próximo estado<select name="status" [(ngModel)]="status">
+                  @for (option of transitions(); track option) {
+                    <option [value]="option">{{ option }}</option>
+                  }
+                </select></label
+              >
+              <button [disabled]="saving() || !status">
+                {{ saving() ? 'Guardando…' : 'Actualizar estado' }}
+              </button>
+            } @else {
+              <p class="muted small">Este pedido no tiene transiciones disponibles.</p>
+            }
+          </form>
+        }
+      } @else {
+        <dl class="detail-list">
+          <dt>Cliente</dt>
+          <dd>{{ order()?.customerName }}</dd>
+          <dt>Fecha de creación</dt>
+          <dd>{{ order()?.createdAt | localDate: true }}</dd>
+          <dt>Detalle</dt>
+          <dd>{{ order()?.detail }}</dd>
+          <dt>Total</dt>
+          <dd>{{ order()?.total | clp }}</dd>
+        </dl>
+        @if (order()?.items?.length) {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>Precio unitario</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of order()?.items; track $index) {
+                  <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.unitPrice | clp }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        <p class="muted small">Tu pedido está disponible en modo de consulta.</p>
+      }
+    </section>
+    <section class="card">
+      <h2>Historial de estados</h2>
+      <p class="muted">Eventos del pedido</p>
+      @if (isNew()) {
+        <p class="empty">El historial comienza al crear el pedido.</p>
+      } @else if (!order()?.history?.length) {
+        <p class="empty">No hay historial disponible para este pedido.</p>
+      } @else {
+        <ol class="timeline">
+          @for (event of order()?.history; track $index) {
+            <li>
+              <app-order-status-badge [status]="event.status" />
+              <p class="muted">
+                {{ event.changedAt | localDate: true }} ·
+                {{ event.actorName || 'Usuario no informado' }}
+                @if (event.actorRole) {
+                  ({{ event.actorRole === 'Cliente' ? 'Customer' : event.actorRole }})
+                }
+              </p>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  </div>
+</app-load-state>

@@ -1,10 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import {
-  provideHttpClient,
-  withInterceptorsFromDi,
-  HTTP_INTERCEPTORS,
-} from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import {
   IPublicClientApplication,
   PublicClientApplication,
@@ -24,6 +20,7 @@ import {
 } from '@azure/msal-angular';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
+import { ApiErrorInterceptor } from './core/interceptors/api-error.interceptor';
 
 // Instancia principal de MSAL (apunta a tu tenant de Entra ID)
 export function MSALInstanceFactory(): IPublicClientApplication {
@@ -32,7 +29,7 @@ export function MSALInstanceFactory(): IPublicClientApplication {
       clientId: environment.msalConfig.clientId,
       authority: environment.msalConfig.authority,
       redirectUri: environment.msalConfig.redirectUri,
-      postLogoutRedirectUri: environment.msalConfig.redirectUri,
+      postLogoutRedirectUri: environment.msalConfig.postLogoutRedirectUri,
     },
     cache: {
       cacheLocation: BrowserCacheLocation.LocalStorage,
@@ -47,15 +44,17 @@ export function MSALGuardConfigFactory(): MsalGuardConfiguration {
     authRequest: {
       scopes: [...environment.apiConfig.scopes],
     },
-    loginFailedRoute: '/',
+    loginFailedRoute: '/login',
   };
 }
 
 // Configuración del Interceptor: adjunta el JWT solo a las llamadas al API
 export function MSALInterceptorConfigFactory(): MsalInterceptorConfiguration {
   const protectedResourceMap = new Map<string, Array<string>>();
-  protectedResourceMap.set(`${environment.apiConfig.pedidosUri}/*`, environment.apiConfig.scopes);
-  protectedResourceMap.set(`${environment.apiConfig.productosUri}/*`, environment.apiConfig.scopes);
+  protectedResourceMap.set(
+    `${environment.apiBaseUrl.replace(/\/$/, '')}/api/*`,
+    environment.apiConfig.scopes,
+  );
 
   return {
     interactionType: InteractionType.Redirect,
@@ -86,6 +85,7 @@ export const appConfig: ApplicationConfig = {
       useFactory: MSALInterceptorConfigFactory,
     },
     MsalService,
+    { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true },
     MsalGuard,
     MsalBroadcastService,
   ],

@@ -1,0 +1,183 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">DEMO ACADÉMICA</p>
+    <h1>Evidencias</h1>
+    <p class="muted">Identidad, disponibilidad y validación de acceso.</p>
+  </div>
+</div>
+<div class="stack">
+  <div class="equal-columns">
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <h2>Token JWT decodificado</h2>
+          <p>Claims del access token que viaja al API Manager</p>
+        </div>
+        <button class="secondary compact" [disabled]="tokenLoading()" (click)="loadToken()">
+          Actualizar
+        </button>
+      </div>
+      <app-load-state [loading]="tokenLoading()" [error]="tokenError()" (retry)="loadToken()">
+        <table class="claim-table">
+          <tbody>
+            @for (key of claims; track key) {
+              <tr>
+                <td class="mono">{{ key }}</td>
+                <td class="mono">{{ claim(key) }}</td>
+              </tr>
+            }
+            <tr>
+              <td class="mono">exp</td>
+              <td class="mono">
+                {{ expires() ? (expires() | localDate: true) : 'No informado' }}
+                <span class="badge" [class.cancelled]="expires() > 0 && expires() <= now()">{{
+                  expiryText()
+                }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="actions" style="margin-top: 1rem">
+          <button class="secondary compact" (click)="copyToken()">Copiar token</button
+          ><a
+            class="button secondary compact"
+            [href]="inspector"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Abrir en jwt.ms ↗</a
+          >
+        </div>
+        <p class="small muted" style="margin-top: 1rem">
+          La decodificación muestra claims; la validación de firma ocurre en el API. jwt.ms se abre
+          sin enviar el token.
+        </p>
+        @if (feedback()) {
+          <p role="status" class="small">{{ feedback() }}</p>
+        }
+      </app-load-state>
+    </section>
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <h2>Estado del despliegue</h2>
+          <p>Disponibilidad reportada por el API Manager</p>
+        </div>
+        <button class="secondary compact" [disabled]="health.loading()" (click)="loadHealth()">
+          Actualizar
+        </button>
+      </div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Frontend</td>
+            <td><span class="badge up">CARGADO</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <app-load-state
+        [loading]="health.loading()"
+        [error]="health.error()"
+        [empty]="!health.data().length"
+        emptyText="No hay servicios informados."
+        (retry)="loadHealth()"
+      >
+        <table>
+          <tbody>
+            @for (service of health.data(); track service.name) {
+              <tr>
+                <td>{{ service.name }}</td>
+                <td>
+                  <span [class]="'badge ' + service.status.toLowerCase()">{{
+                    service.status === 'UNKNOWN' ? 'SIN DATOS' : service.status
+                  }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-load-state>
+      <p class="small muted" style="margin-top: 1rem">
+        El frontend está cargado en este navegador. Un fallo de red no permite conocer el estado de
+        cada servicio.
+      </p>
+    </section>
+  </div>
+  <section class="card">
+    <h2>Pruebas de validación JWT en API Manager</h2>
+    <p class="muted">Ejecuta cada caso para obtener su respuesta real.</p>
+    <div class="actions">
+      @for (test of cases; track test.kind) {
+        <button
+          [class.secondary]="test.kind !== 'valid'"
+          [disabled]="!!running()"
+          (click)="run(test.kind)"
+        >
+          {{ running() === test.kind ? 'Ejecutando…' : '▶ ' + test.label }}
+        </button>
+      }
+    </div>
+    <label style="margin-top: 1rem; max-width: 600px"
+      >Token expirado (si no hay uno disponible)<input
+        type="password"
+        autocomplete="off"
+        [(ngModel)]="expiredToken"
+        placeholder="Pega aquí un access token expirado"
+    /></label>
+    @if (testError()) {
+      <p class="error" role="alert" style="margin-top: 1rem">{{ testError() }}</p>
+    }
+    <div class="table-wrap" style="margin-top: 1rem">
+      <table>
+        <thead>
+          <tr>
+            <th>Caso</th>
+            <th>Request</th>
+            <th>Header Authorization</th>
+            <th>Esperado</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (test of cases; track test.kind) {
+            <tr>
+              <td>{{ test.label }}</td>
+              <td class="mono nowrap">GET /api/orders</td>
+              <td class="mono">{{ results()[test.kind]?.header ?? '—' }}</td>
+              <td>{{ test.expected }}</td>
+              <td>
+                @if (results()[test.kind]; as result) {
+                  <span [class]="result.matches ? 'badge completed' : 'badge cancelled'">{{
+                    result.message
+                  }}</span>
+                } @else {
+                  <span class="muted small">Sin ejecutar</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted" style="margin-top: 1rem">
+      Un 401 confirma el rechazo. El código HTTP por sí solo no permite distinguir firma inválida de
+      expiración.
+    </p>
+  </section>
+  <section class="card">
+    <h2>Accesos rápidos a consolas</h2>
+    <p class="muted">Abre las herramientas de infraestructura para la demo.</p>
+    <div class="console-links">
+      @for (console of consoles; track console.label) {
+        @if (console.url) {
+          <a class="console-link" [href]="console.url" target="_blank" rel="noopener noreferrer"
+            >{{ console.label }} ↗<span>{{ console.detail }}</span></a
+          >
+        } @else {
+          <div class="console-link">
+            {{ console.label }}<span>URL pendiente de configurar</span>
+          </div>
+        }
+      }
+    </div>
+  </section>
+</div>

@@ -1,24 +1,15 @@
-<header class="navbar">
-  <a class="brand" routerLink="/">Pedidos360</a>
-
-  <nav class="nav-links">
-    <a routerLink="/">Inicio</a>
-    @if (loginDisplay()) {
-      <a routerLink="/pedidos">Pedidos</a>
-      <a routerLink="/productos">Productos</a>
-      <a routerLink="/perfil">Mi perfil</a>
-    }
-  </nav>
-
-  <div class="nav-actions">
-    @if (loginDisplay()) {
-      <button class="btn btn-outline" (click)="logout()">Cerrar sesión</button>
-    } @else {
-      <button class="btn btn-primary" (click)="login()">Iniciar sesión con Microsoft</button>
-    }
-  </div>
-</header>
-
-<main class="content">
-  <router-outlet />
-</main>
+@if (notice.message()) {
+  <aside class="access-notice" role="alert">
+    <strong>{{ notice.message() }}</strong>
+    <a routerLink="/dashboard" (click)="notice.message.set('')">Ir al dashboard</a>
+    <button
+      type="button"
+      class="secondary"
+      (click)="notice.message.set('')"
+      aria-label="Cerrar aviso"
+    >
+      Cerrar
+    </button>
+  </aside>
+}
+<router-outlet />
