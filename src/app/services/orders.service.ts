@@ -81,6 +81,10 @@ export class OrdersService {
       .patch<unknown>(apiUrl('/orders/' + encodeURIComponent(id) + '/status'), { status })
       .pipe(map(adaptOrder));
   }
+  reassign(id: string, customerId: string, customerTenantId: string) {
+    return this.http.patch<unknown>(apiUrl('/orders/' + encodeURIComponent(id) + '/owner'),
+      { customerId, customerTenantId }).pipe(map(adaptOrder));
+  }
   private canRead(order: Order): boolean {
     return (
       this.auth.hasRole('Admin') ||

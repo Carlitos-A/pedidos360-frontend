@@ -12,6 +12,7 @@ import { OrderStatusBadgeComponent } from '../../shared/order-status-badge.compo
 import { ClpPipe, LocalDatePipe } from '../../shared/format';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
+import { CustomersService, CustomerOption } from '../../services/customers.service';
 
 @Component({
   selector: 'app-order-detail',
@@ -28,6 +29,7 @@ import { Subscription } from 'rxjs';
 export class OrderDetailComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly service = inject(OrdersService);
+  private readonly customers = inject(CustomersService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -37,6 +39,11 @@ export class OrderDetailComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal('');
   readonly success = signal('');
+  readonly customerOptions = signal<CustomerOption[]>([]);
+  readonly customerError = signal('');
+  readonly customerLoading = signal(false);
+  customerQuery = '';
+  selectedCustomerId = '';
   readonly transitions = computed(() =>
     this.order() ? allowedTransitions(this.order()!.status) : [],
   );
@@ -56,8 +63,44 @@ export class OrderDetailComponent implements OnInit {
       this.success.set('');
       this.loadError.set('');
       this.form = this.empty();
+      this.customerOptions.set([]);
+      this.selectedCustomerId = '';
       if (this.id) this.load();
     });
+  }
+  searchCustomers(): void {
+    if (this.customerQuery.trim().length < 2) return;
+    this.selectedCustomerId = '';
+    this.customerOptions.set([]);
+    if (this.isNew()) {
+      this.form.customerName = '';
+      this.form.customerId = '';
+    }
+    this.customerLoading.set(true);
+    this.customerError.set('');
+    this.customers.search(this.customerQuery.trim()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (options) => { this.customerOptions.set(options); this.customerLoading.set(false); },
+      error: (error) => { this.customerError.set(describeError(error)); this.customerLoading.set(false); },
+    });
+  }
+  chooseCustomer(id: string): void {
+    const customer = this.customerOptions().find((option) => option.id === id);
+    this.selectedCustomerId = id;
+    if (customer && this.isNew()) {
+      this.form.customerName = customer.name;
+      this.form.customerId = customer.id;
+      this.form.customerTenantId = customer.tenantId;
+    }
+  }
+  reassignOwner(): void {
+    const customer = this.customerOptions().find((option) => option.id === this.selectedCustomerId);
+    if (!customer || this.isNew() || !this.auth.hasRole('Admin') || this.saving()) return;
+    this.saving.set(true); this.error.set('');
+    this.service.reassign(this.id, customer.id, customer.tenantId)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (order) => { this.setOrder(order); this.saving.set(false); this.success.set('Propietario actualizado.'); },
+        error: (error) => { this.saving.set(false); this.error.set(describeError(error)); },
+      });
   }
   load(): void {
     this.loading.set(true);

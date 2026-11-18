@@ -37,19 +37,30 @@
               [(ngModel)]="form.customerName"
               required
               maxlength="200"
+              readonly
           /></label>
           @if (!isNew()) {
             <label
               >Fecha de creación<input [value]="order()?.createdAt | localDate: true" readonly
             /></label>
           }
-          <label class="span-2"
-            >Cuenta del cliente (ID de Entra)<input
-              name="customerId"
-              [(ngModel)]="form.customerId"
-              required
-              placeholder="ID de objeto del usuario en Microsoft Entra ID"
-          /></label>
+          @if (isNew()) {
+            <div class="span-2">
+              <label>Buscar Cliente<input name="customerQuery" [(ngModel)]="customerQuery"
+                placeholder="Nombre en Microsoft Entra" /></label>
+              <button type="button" class="secondary compact" [disabled]="customerLoading()" (click)="searchCustomers()">Buscar</button>
+              @if (customerError()) { <p class="error">{{ customerError() }}</p> }
+              <label>Cuenta verificada<select name="selectedCustomer" [ngModel]="selectedCustomerId"
+                (ngModelChange)="chooseCustomer($event)" required>
+                <option value="">Selecciona una cuenta</option>
+                @for (customer of customerOptions(); track customer.id) {
+                  <option [value]="customer.id">{{ customer.name }} · {{ customer.email }}</option>
+                }
+              </select></label>
+            </div>
+          } @else {
+            <label class="span-2">Cuenta propietaria<input [value]="order()?.customerName + ' · ' + order()?.customerId" readonly /></label>
+          }
           <label class="span-2"
             >Detalle<textarea
               name="detail"
@@ -122,6 +133,20 @@
           </div>
         </form>
         @if (!isNew()) {
+          <hr class="section-divider" />
+          <div class="form-stack">
+            <h3>Reasignar propietario</h3>
+            <label>Buscar Cliente<input name="ownerQuery" [(ngModel)]="customerQuery" /></label>
+            <button type="button" class="secondary compact" [disabled]="customerLoading()" (click)="searchCustomers()">Buscar</button>
+            @if (customerError()) { <p class="error">{{ customerError() }}</p> }
+            <label>Cuenta verificada<select name="newOwner" [(ngModel)]="selectedCustomerId">
+              <option value="">Selecciona una cuenta</option>
+              @for (customer of customerOptions(); track customer.id) {
+                <option [value]="customer.id">{{ customer.name }} · {{ customer.email }}</option>
+              }
+            </select></label>
+            <button type="button" [disabled]="!selectedCustomerId || saving()" (click)="reassignOwner()">Reasignar</button>
+          </div>
           <hr class="section-divider" />
           <form id="change-status" class="form-stack" (ngSubmit)="changeStatus()">
             <h3>Cambiar estado</h3>
