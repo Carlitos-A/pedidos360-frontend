@@ -21,10 +21,10 @@ import { AuthService } from '../../services/auth.service';
         <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
         @if (auth.hasRole('Admin', 'Cliente')) {
           <a routerLink="/orders" routerLinkActive="active">Pedidos</a>
+          <a routerLink="/catalog" routerLinkActive="active">Productos</a>
         }
         @if (auth.hasRole('Admin')) {
-          <a routerLink="/catalog" routerLinkActive="active">Catálogo</a
-          ><a routerLink="/reports" routerLinkActive="active">Reportes</a>
+          <a routerLink="/reports" routerLinkActive="active">Reportes</a>
           <a routerLink="/audit" routerLinkActive="active">Auditoría</a
           ><a routerLink="/evidence" routerLinkActive="active">Evidencias</a>
         }

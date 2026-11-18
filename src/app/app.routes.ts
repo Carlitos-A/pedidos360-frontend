@@ -33,7 +33,7 @@ export const routes: Routes = [
         path: 'catalog',
         loadComponent: () => import('./features/catalog/catalog.component').then(m => m.CatalogComponent),
         canActivate: [authGuard, roleGuard],
-        data: { roles: ['Admin'] },
+        data: { roles: ['Admin', 'Cliente'] },
       },
       { path: 'profile', loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent), canActivate: [authGuard] },
       {

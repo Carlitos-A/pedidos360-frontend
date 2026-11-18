@@ -62,6 +62,8 @@ export function adaptProduct(value: unknown): Product {
     category: String(data['category'] ?? data['categoria'] ?? ''),
     price: nullableNumber(data['price'] ?? data['precio']),
     stock: nullableNumber(data['stock']),
+    customerId: String(data['customerId'] ?? ''),
+    customerTenantId: String(data['customerTenantId'] ?? ''),
   };
 }
 export function nextStatus(status: DisplayStatus): OrderStatus | null {

@@ -16,8 +16,8 @@ import { ProductFormComponent } from './product-form.component';
     <div class="page-heading">
       <div>
         <p class="eyebrow">PRODUCTOS E INVENTARIO</p>
-        <h1>Catálogo</h1>
-        <p class="muted">Administra tus productos y mantén el stock al día.</p>
+        <h1>{{ auth.hasRole('Admin') ? 'Catálogo' : 'Mis productos' }}</h1>
+        <p class="muted">{{ auth.hasRole('Admin') ? 'Administra los productos y mantén el stock al día.' : 'Consulta tus productos asignados.' }}</p>
       </div>
     </div>
     @if (success()) {

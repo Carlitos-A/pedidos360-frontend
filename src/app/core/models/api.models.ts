@@ -47,12 +47,16 @@ export interface Product {
   category: string;
   price: number | null;
   stock: number | null;
+  customerId: string;
+  customerTenantId: string;
 }
 export interface ProductInput {
   name: string;
   category: string;
   price: number;
   stock: number;
+  customerId: string;
+  customerTenantId: string;
 }
 export interface Page<T> {
   items: T[];
