@@ -1,60 +1,21 @@
 # Pedidos360 — Frontend
 
-Frontend Angular del sistema Pedidos360 (EP1 · DSY1107). Interfaz para gestión
-de pedidos y productos, consumiendo los microservicios Spring Boot del
-[backend](https://github.com/Carlitos-A/pedidos360-backend) mediante API REST.
+Aplicación Angular 22 para gestión de pedidos, catálogo, reportes y auditoría con Microsoft Entra ID. Usa el access token de MSAL para consumir una única URL de API Manager.
 
-## Funcionalidades
+Los app roles válidos son `Admin` y `Cliente`. En pantalla, `Cliente` se muestra como **Customer**. Admin reúne también las tareas operativas; solo Admin puede crear pedidos. El backend debe filtrar por propietario los pedidos de Customer.
 
-- **Catálogo de productos** — listado de `productos-service` (puerto 8082).
-- **Pedidos** — creación y listado de pedidos contra `pedidos-service` (puerto 8081).
-- **Autenticación con Microsoft Entra ID** — inicio de sesión con cuentas
-  organizacionales; el frontend obtiene el JWT y lo envía en cada request.
-- **Autorización por rol** — la UI adapta las acciones según el rol del
-  usuario (`Admin` / `Cliente`): ver y crear según permisos.
-
-## Tecnologías
-
-- Angular 22
-- TypeScript
-
-## Estructura
-
-```text
-src/app/
-├─ home/         # Página principal
-├─ pedidos/      # Módulo de pedidos
-├─ productos/    # Módulo de productos
-├─ perfil/       # Perfil del usuario autenticado
-├─ services/     # Servicios HTTP y de autenticación
-├─ models/       # Modelos de datos
-└─ environments/ # Configuración por ambiente
-```
-
-## Requisitos
-
-- Node.js LTS
-- Backend de Pedidos360 corriendo (ver repositorio del backend)
-
-## Configuración
-
-1. Instalar dependencias: `npm install`
-2. En `src/environments/environment.ts`, configurar los IDs de la aplicación
-   de Microsoft Entra ID (client ID, tenant/authority) y las URLs de los
-   servicios backend.
-
-## Ejecutar
+## Desarrollo
 
 ```bash
-ng serve
+npm install
+npm start
 ```
 
-La aplicación queda disponible en `http://localhost:4200/` (CORS ya habilitado
-en el backend para ese origen).
-
-## Tests
+Registrar `http://localhost:4200/auth/callback` como redirect URI SPA en Entra ID. Configurar `apiBaseUrl`, IDs, scopes, URLs de consolas y servicios de health en [`src/environments/environment.ts`](src/environments/environment.ts) y su variante de producción. MSAL gestiona su caché.
 
 ```bash
-ng test    # unitarios (Vitest)
-ng e2e     # end-to-end
+npm test -- --watch=false
+npm run build
 ```
+
+Las rutas y los pasos de prueba por rol están en [ROUTES_AND_TESTING.md](ROUTES_AND_TESTING.md). Los contratos, migraciones y cambios necesarios en el backend están en [TODO.md](TODO.md). Los endpoints nuevos pueden fallar hasta que API Manager/BFF y los servicios de reportes y auditoría los implementen.
