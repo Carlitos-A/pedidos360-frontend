@@ -10,47 +10,64 @@ export const routes: Routes = [
     path: '',
     component: LayoutComponent,
     children: [
-      { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent), canActivate: [authGuard] },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+        canActivate: [authGuard],
+      },
       {
         path: 'orders',
-        loadComponent: () => import('./features/orders/orders.component').then(m => m.OrdersComponent),
+        loadComponent: () =>
+          import('./features/orders/orders.component').then((m) => m.OrdersComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin', 'Cliente'] },
       },
       {
         path: 'orders/new',
-        loadComponent: () => import('./features/orders/order-detail.component').then(m => m.OrderDetailComponent),
+        loadComponent: () =>
+          import('./features/orders/order-detail.component').then((m) => m.OrderDetailComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin'] },
       },
       {
         path: 'orders/:id',
-        loadComponent: () => import('./features/orders/order-detail.component').then(m => m.OrderDetailComponent),
+        loadComponent: () =>
+          import('./features/orders/order-detail.component').then((m) => m.OrderDetailComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin', 'Cliente'] },
       },
       {
         path: 'catalog',
-        loadComponent: () => import('./features/catalog/catalog.component').then(m => m.CatalogComponent),
+        loadComponent: () =>
+          import('./features/catalog/catalog.component').then((m) => m.CatalogComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin', 'Cliente'] },
       },
-      { path: 'profile', loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent), canActivate: [authGuard] },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/profile.component').then((m) => m.ProfileComponent),
+        canActivate: [authGuard],
+      },
       {
         path: 'reports',
-        loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent),
+        loadComponent: () =>
+          import('./features/reports/reports.component').then((m) => m.ReportsComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin'] },
       },
       {
         path: 'audit',
-        loadComponent: () => import('./features/audit/audit.component').then(m => m.AuditComponent),
+        loadComponent: () =>
+          import('./features/audit/audit.component').then((m) => m.AuditComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin'] },
       },
       {
         path: 'evidence',
-        loadComponent: () => import('./features/evidence/evidence.component').then(m => m.EvidenceComponent),
+        loadComponent: () =>
+          import('./features/evidence/evidence.component').then((m) => m.EvidenceComponent),
         canActivate: [authGuard, roleGuard],
         data: { roles: ['Admin'] },
       },
