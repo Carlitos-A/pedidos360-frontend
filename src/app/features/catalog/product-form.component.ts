@@ -115,7 +115,7 @@ export class ProductFormComponent {
       !this.form.customerTenantId.trim() ||
       this.form.price === null ||
       this.form.stock === null ||
-      !Number.isFinite(this.form.price) ||
+      !Number.isSafeInteger(this.form.price) ||
       this.form.price < 0 ||
       !Number.isInteger(this.form.stock) ||
       this.form.stock < 0

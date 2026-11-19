@@ -14,6 +14,8 @@ import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CustomersService, CustomerOption } from '../../services/customers.service';
+import { ProductsService } from '../../services/products.service';
+import { Product, OrderItem } from '../../core/models/api.models';
 
 @Component({
   selector: 'app-order-detail',
@@ -31,6 +33,7 @@ export class OrderDetailComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly service = inject(OrdersService);
   private readonly customers = inject(CustomersService);
+  private readonly products = inject(ProductsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -43,19 +46,30 @@ export class OrderDetailComponent implements OnInit {
   readonly customerOptions = signal<CustomerOption[]>([]);
   readonly customerError = signal('');
   readonly customerLoading = signal(false);
+  readonly catalog = signal<Product[]>([]);
+  readonly catalogError = signal('');
+  readonly availableProducts = computed(() => this.catalog().filter((product) =>
+    product.customerId === this.form.customerId &&
+    product.customerTenantId === this.form.customerTenantId &&
+    product.price !== null && Number.isSafeInteger(product.price) &&
+    product.stock !== null));
   customerQuery = '';
   selectedCustomerId = '';
   readonly transitions = computed(() =>
     this.order() ? allowedTransitions(this.order()!.status) : [],
   );
   readonly isNew = signal(false);
+  readonly isTerminal = computed(() => this.order()?.status === 'COMPLETED' || this.order()?.status === 'CANCELLED');
   status: OrderStatus | '' = '';
   form: Omit<OrderInput, 'total'> & { total: number | null } = this.empty();
   private id = '';
   private request?: Subscription;
+  private catalogRequest?: Subscription;
+  private createRequestId = crypto.randomUUID();
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.request?.unsubscribe();
+      this.catalogRequest?.unsubscribe();
       this.loading.set(false);
       this.id = params.get('id') ?? '';
       this.isNew.set(!this.id);
@@ -66,6 +80,8 @@ export class OrderDetailComponent implements OnInit {
       this.form = this.empty();
       this.customerOptions.set([]);
       this.selectedCustomerId = '';
+      this.catalog.set([]);
+      this.createRequestId = crypto.randomUUID();
       if (this.id) this.load();
     });
   }
@@ -91,6 +107,10 @@ export class OrderDetailComponent implements OnInit {
       this.form.customerName = customer.name;
       this.form.customerId = customer.id;
       this.form.customerTenantId = customer.tenantId;
+      this.form.items = [];
+      this.catalog.set([]);
+      this.recalculate();
+      this.loadCatalog();
     }
   }
   reassignOwner(): void {
@@ -122,10 +142,36 @@ export class OrderDetailComponent implements OnInit {
       });
   }
   addItem(): void {
+    if (this.isTerminal()) return;
     this.form.items ??= [];
     this.form.items.push({ productId: '', name: '', quantity: 1, unitPrice: 0 });
   }
+  selectProduct(item: OrderItem, id: string): void {
+    const product = this.availableProducts().find((value) => value.id === id);
+    item.productId = product?.id ?? '';
+    item.name = product?.name ?? '';
+    item.unitPrice = product?.price ?? 0;
+    this.recalculate();
+  }
+  onQuantityChanged(item: OrderItem): void {
+    const product = this.availableProducts().find((value) => value.id === item.productId);
+    if (product?.price !== null && product?.price !== undefined) {
+      item.name = product.name;
+      item.unitPrice = product.price;
+    }
+    this.recalculate();
+  }
+  loadCatalog(): void {
+    if (!this.auth.hasRole('Admin')) return;
+    this.catalogRequest?.unsubscribe();
+    this.catalogError.set('');
+    this.catalogRequest = this.products.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (products) => this.catalog.set(products),
+      error: (error) => this.catalogError.set(describeError(error)),
+    });
+  }
   removeItem(index: number): void {
+    if (this.isTerminal()) return;
     this.form.items?.splice(index, 1);
     this.recalculate();
   }
@@ -135,27 +181,39 @@ export class OrderDetailComponent implements OnInit {
         (total, item) => total + Number(item.quantity) * Number(item.unitPrice),
         0,
       );
+    else if (this.isNew()) this.form.total = 0;
+  }
+  private itemsChanged(): boolean {
+    const original = this.order()?.items ?? [];
+    const current = this.form.items ?? [];
+    return current.length !== original.length || current.some((item, index) =>
+      item.productId !== original[index].productId || Number(item.quantity) !== original[index].quantity);
   }
   save(): void {
     if (!this.auth.hasRole('Admin') || this.saving()) return;
     this.recalculate();
+    const changingItems = this.isNew() || this.itemsChanged();
     if (
       !this.form.customerName.trim() ||
       !this.form.detail.trim() ||
       !this.form.customerId.trim() ||
       !this.form.customerTenantId.trim() ||
-      this.form.total === null ||
-      !Number.isFinite(this.form.total) ||
-      this.form.total < 0 ||
-      this.form.items?.some(
+      (this.isNew() && !this.form.items?.length) ||
+      (!this.isNew() && !!this.order()?.items.length && !this.form.items?.length) ||
+      (!this.isNew() && this.order()?.version === null) ||
+      (this.isTerminal() && changingItems) ||
+      (changingItems && (this.form.total === null || !Number.isSafeInteger(this.form.total) || this.form.total < 0)) ||
+      (changingItems && new Set(this.form.items?.map((item) => item.productId)).size !== (this.form.items?.length ?? 0)) ||
+      (changingItems && this.form.items?.some(
         (item) =>
-          !item.productId.trim() ||
+          !this.availableProducts().some((product) => product.id === item.productId &&
+            product.stock! + (this.order()?.items.find((old) => old.productId === item.productId)?.quantity ?? 0) >= item.quantity) ||
           !item.name.trim() ||
           !Number.isInteger(item.quantity) ||
           item.quantity < 1 ||
-          !Number.isFinite(item.unitPrice) ||
+          !Number.isSafeInteger(item.unitPrice) ||
           item.unitPrice < 0,
-      )
+      ))
     ) {
       this.error.set(
         'Completa cliente, cuenta, detalle y valores válidos. Las cantidades deben ser enteros positivos.',
@@ -167,10 +225,12 @@ export class OrderDetailComponent implements OnInit {
     this.success.set('');
     const input = {
       ...this.form,
-      total: this.form.total,
+      total: this.form.total ?? 0,
       customerName: this.form.customerName.trim(),
       customerId: this.form.customerId.trim(),
       detail: this.form.detail.trim(),
+      requestId: this.isNew() ? this.createRequestId : undefined,
+      expectedVersion: this.isNew() ? undefined : this.order()?.version ?? undefined,
     };
     const request = this.isNew() ? this.service.create(input) : this.service.update(this.id, input);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -184,7 +244,12 @@ export class OrderDetailComponent implements OnInit {
       },
       error: (error) => {
         this.saving.set(false);
-        this.error.set(describeError(error));
+        if (error instanceof HttpErrorResponse && error.status === 409) {
+          this.error.set('El precio, stock o pedido cambió. Revisa los datos actualizados antes de guardar.');
+          if (this.isNew()) this.createRequestId = crypto.randomUUID();
+          else this.load();
+          this.loadCatalog();
+        } else this.error.set(describeError(error));
       },
     });
   }
@@ -220,6 +285,7 @@ export class OrderDetailComponent implements OnInit {
   }
   private setOrder(order: Order): void {
     this.order.set(order);
+    this.catalog.set([]);
     this.form = {
       customerName: order.customerName,
       customerId: order.customerId,
@@ -229,6 +295,7 @@ export class OrderDetailComponent implements OnInit {
       items: order.items.map((item) => ({ ...item })),
     };
     this.status = allowedTransitions(order.status)[0] ?? '';
+    this.loadCatalog();
   }
   private empty(): OrderInput {
     return {

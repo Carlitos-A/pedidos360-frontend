@@ -41,6 +41,8 @@ export interface OrderInput {
   detail: string;
   total: number;
   items?: OrderItem[];
+  requestId?: string;
+  expectedVersion?: number;
 }
 export interface Product {
   id: string;

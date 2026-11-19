@@ -84,4 +84,19 @@ describe('Contrato de pedidos', () => {
     expect(req.request.body).toEqual({ status: 'ACCEPTED', expectedVersion: 3 });
     req.flush({ id: 7, status: 'ACCEPTED', version: 4 });
   });
+  it('envía clave idempotente al crear y versión al editar', () => {
+    const input = {
+      customerName: 'Cliente', customerId: 'owner', customerTenantId: 'tenant',
+      detail: 'Detalle', total: 200, items: [{ productId: '7', name: 'Producto', quantity: 2, unitPrice: 100 }],
+      requestId: 'request-1',
+    };
+    service.create(input).subscribe((order) => expect(order.total).toBe(250));
+    const create = http.expectOne(apiUrl('/orders'));
+    expect(create.request.body.requestId).toBe('request-1');
+    create.flush({ id: 8, total: 250, status: 'CREATED', version: 0 });
+    service.update('8', { ...input, expectedVersion: 0 }).subscribe();
+    const update = http.expectOne(apiUrl('/orders/8'));
+    expect(update.request.body.expectedVersion).toBe(0);
+    update.flush({ id: 8, total: 250, status: 'CREATED', version: 1 });
+  });
 });

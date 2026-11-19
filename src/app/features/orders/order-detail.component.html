@@ -76,29 +76,39 @@
               min="0"
               step="1"
               [(ngModel)]="form.total"
-              [readonly]="!!form.items?.length"
+              readonly
               required
           /></label>
           <div class="span-2 stack">
             <div class="section-heading">
               <div>
                 <h3>Productos del pedido</h3>
-                <p>Opcional. El total se calcula con las cantidades y precios.</p>
+                <p>Selecciona productos de este cliente. El servidor confirmará precios, stock y total.</p>
               </div>
-              <button type="button" class="secondary compact" (click)="addItem()">
+              <button type="button" class="secondary compact" [disabled]="isTerminal() || !availableProducts().length" (click)="addItem()">
                 + Agregar producto
               </button>
             </div>
+            @if (catalogError()) { <p class="error">{{ catalogError() }}</p> }
             @for (item of form.items; track $index; let i = $index) {
               <div class="form-grid">
                 <label
-                  >Código del producto<input
+                  >Producto<select
                     [name]="'productId' + i"
-                    [(ngModel)]="item.productId"
+                    [ngModel]="item.productId"
+                    (ngModelChange)="selectProduct(item, $event)"
+                    [disabled]="isTerminal()"
                     required
-                /></label>
+                  ><option value="">Selecciona un producto</option>
+                    @if (item.productId && !availableProducts().some(product => product.id === item.productId)) {
+                      <option [value]="item.productId">{{ item.name }} · producto del pedido</option>
+                    }
+                    @for (product of availableProducts(); track product.id) {
+                      <option [value]="product.id">{{ product.name }} · {{ product.price | clp }} · stock {{ product.stock }}</option>
+                    }
+                  </select></label>
                 <label
-                  >Nombre<input [name]="'itemName' + i" [(ngModel)]="item.name" required
+                  >Nombre<input [name]="'itemName' + i" [(ngModel)]="item.name" readonly required
                 /></label>
                 <label
                   >Cantidad<input
@@ -107,7 +117,8 @@
                     step="1"
                     [name]="'quantity' + i"
                     [(ngModel)]="item.quantity"
-                    (ngModelChange)="recalculate()"
+                    (ngModelChange)="onQuantityChanged(item)"
+                    [readonly]="isTerminal()"
                     required
                 /></label>
                 <label
@@ -117,10 +128,10 @@
                     step="1"
                     [name]="'unitPrice' + i"
                     [(ngModel)]="item.unitPrice"
-                    (ngModelChange)="recalculate()"
+                    readonly
                     required
                 /></label>
-                <button class="secondary compact" type="button" (click)="removeItem(i)">
+                <button class="secondary compact" type="button" [disabled]="isTerminal()" (click)="removeItem(i)">
                   Quitar producto
                 </button>
               </div>
