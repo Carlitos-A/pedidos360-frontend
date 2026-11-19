@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { OrdersService } from '../../services/orders.service';
 import { ReportsService } from '../../services/reports.service';
@@ -92,11 +93,11 @@ export class DashboardComponent implements OnInit {
   }
   advance(order: Order): void {
     const status = nextStatus(order.status);
-    if (!this.auth.hasRole('Admin') || !status || this.changing()) return;
+    if (!this.auth.hasRole('Admin') || !status || order.version === null || this.changing()) return;
     this.changing.set(order.id);
     this.actionError.set('');
     this.orders
-      .changeStatus(order.id, status)
+      .changeStatus(order.id, status, order.version)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -105,7 +106,10 @@ export class DashboardComponent implements OnInit {
         },
         error: (error) => {
           this.changing.set('');
-          this.actionError.set(describeError(error));
+          if (error instanceof HttpErrorResponse && error.status === 409) {
+            this.actionError.set('El pedido cambió. Revisa los datos actualizados antes de intentar de nuevo.');
+            this.load();
+          } else this.actionError.set(describeError(error));
         },
       });
   }

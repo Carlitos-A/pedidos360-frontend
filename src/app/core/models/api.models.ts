@@ -28,6 +28,7 @@ export interface Order {
   total: number | null;
   status: DisplayStatus;
   rawStatus: string;
+  version: number | null;
   createdAt: string;
   updatedAt?: string;
   history: StatusEvent[];

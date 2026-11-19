@@ -158,9 +158,12 @@
                   }
                 </select></label
               >
-              <button [disabled]="saving() || !status">
+              <button [disabled]="saving() || !status || order()?.version === null">
                 {{ saving() ? 'Guardando…' : 'Actualizar estado' }}
               </button>
+              @if (order()?.version === null) {
+                <p class="muted small">Este pedido requiere actualizar su versión antes de cambiar el estado.</p>
+              }
             } @else {
               <p class="muted small">Este pedido no tiene transiciones disponibles.</p>
             }

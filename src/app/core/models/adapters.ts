@@ -34,6 +34,8 @@ export function adaptOrder(value: unknown): Order {
     total: nullableNumber(data['total']),
     status: normalizeStatus(data['status'] ?? data['estado']),
     rawStatus: String(data['status'] ?? data['estado'] ?? ''),
+    version: Number.isSafeInteger(data['version']) && Number(data['version']) >= 0
+      ? Number(data['version']) : null,
     createdAt: String(data['createdAt'] ?? data['fecha'] ?? ''),
     updatedAt: data['updatedAt'] ? String(data['updatedAt']) : undefined,
     history: Array.isArray(data['history'])

@@ -76,9 +76,9 @@ export class OrdersService {
       .put<unknown>(apiUrl('/orders/' + encodeURIComponent(id)), input)
       .pipe(map(adaptOrder));
   }
-  changeStatus(id: string, status: OrderStatus) {
+  changeStatus(id: string, status: OrderStatus, expectedVersion: number) {
     return this.http
-      .patch<unknown>(apiUrl('/orders/' + encodeURIComponent(id) + '/status'), { status })
+      .patch<unknown>(apiUrl('/orders/' + encodeURIComponent(id) + '/status'), { status, expectedVersion })
       .pipe(map(adaptOrder));
   }
   reassign(id: string, customerId: string, customerTenantId: string) {

@@ -1,23 +1,68 @@
 import { describe, expect, it } from 'vitest';
-import { adaptOrder, adaptProduct, allowedTransitions, normalizeStatus, ownsOrder } from './adapters';
+import {
+  adaptOrder,
+  adaptProduct,
+  allowedTransitions,
+  normalizeStatus,
+  ownsOrder,
+} from './adapters';
 import { decodeJwtPayload, tokenRoles } from '../auth/jwt';
 import { ClpPipe, LocalDatePipe } from '../../shared/format';
 describe('Migración y permisos', () => {
-  it.each([['PENDIENTE', 'CREATED'], ['EN_PREPARACION', 'IN_PROGRESS'], ['ENTREGADO', 'COMPLETED'], ['ACCEPTED', 'ACCEPTED'], ['CANCELLED', 'CANCELLED'], ['OTRO', 'UNKNOWN']])('adapta %s a %s', (old, current) => expect(normalizeStatus(old)).toBe(current));
+  it.each([
+    ['PENDIENTE', 'CREATED'],
+    ['EN_PREPARACION', 'IN_PROGRESS'],
+    ['ENTREGADO', 'COMPLETED'],
+    ['ACCEPTED', 'ACCEPTED'],
+    ['CANCELLED', 'CANCELLED'],
+    ['OTRO', 'UNKNOWN'],
+  ])('adapta %s a %s', (old, current) => expect(normalizeStatus(old)).toBe(current));
   it('conserva los campos antiguos sin inventar stock ni historial', () => {
-    const order = adaptOrder({ id: 7, cliente: 'Cliente Demo', detalle: 'Pizza', total: 12990, estado: 'ENTREGADO', fecha: '2026-11-01T12:30:00' });
-    expect(order).toMatchObject({ id: '7', customerName: 'Cliente Demo', detail: 'Pizza', total: 12990, status: 'COMPLETED', history: [], customerId: '' });
-    expect(adaptProduct({ id: 3, nombre: 'Teclado', categoria: 'Periféricos', precio: 54990 })).toMatchObject({ name: 'Teclado', stock: null, price: 54990 });
+    const order = adaptOrder({
+      id: 7,
+      cliente: 'Cliente Demo',
+      detalle: 'Pizza',
+      total: 12990,
+      estado: 'ENTREGADO',
+      fecha: '2026-11-01T12:30:00',
+    });
+    expect(order).toMatchObject({
+      id: '7',
+      customerName: 'Cliente Demo',
+      detail: 'Pizza',
+      total: 12990,
+      status: 'COMPLETED',
+      history: [],
+      customerId: '',
+    });
+    expect(
+      adaptProduct({ id: 3, nombre: 'Teclado', categoria: 'Periféricos', precio: 54990 }),
+    ).toMatchObject({ name: 'Teclado', stock: null, price: 54990 });
   });
   it('preserva cero y no interpreta un estado desconocido como CREATED', () => {
     expect(adaptProduct({ id: '1', stock: 0, price: 0 }).stock).toBe(0);
-    expect(adaptOrder({ id: '1', estado: 'DESPACHADO' })).toMatchObject({ status: 'UNKNOWN', rawStatus: 'DESPACHADO', total: null });
+    expect(adaptOrder({ id: '1', estado: 'DESPACHADO' })).toMatchObject({
+      status: 'UNKNOWN',
+      rawStatus: 'DESPACHADO',
+      total: null,
+      version: null,
+    });
+    expect(adaptOrder({ id: '2', status: 'CANCELLED', version: 0 })).toMatchObject({
+      status: 'CANCELLED', version: 0,
+    });
   });
   it('exige propietario y tenant coincidentes', () => {
-    const order = adaptOrder({ id: 1, cliente: 'Ana', customerId: 'ana', customerTenantId: 'tenant-a' });
+    const order = adaptOrder({
+      id: 1,
+      cliente: 'Ana',
+      customerId: 'ana',
+      customerTenantId: 'tenant-a',
+    });
     expect(ownsOrder(order, { id: 'ana', tenantId: 'tenant-a' })).toBe(true);
     expect(ownsOrder(order, { id: 'ana', tenantId: 'tenant-b' })).toBe(false);
-    expect(ownsOrder(adaptOrder({ id: 1, cliente: 'Ana' }), { id: 'ana', tenantId: 'tenant-a' })).toBe(false);
+    expect(
+      ownsOrder(adaptOrder({ id: 1, cliente: 'Ana' }), { id: 'ana', tenantId: 'tenant-a' }),
+    ).toBe(false);
   });
   it('no permite retroceder ni modificar estados terminales', () => {
     expect(allowedTransitions('CREATED')).toEqual(['ACCEPTED', 'CANCELLED']);
@@ -27,13 +72,19 @@ describe('Migración y permisos', () => {
     expect(allowedTransitions('UNKNOWN')).toEqual([]);
   });
   it('acepta exclusivamente Admin y Cliente', () => {
-    expect(tokenRoles({ roles: ['Operator', 'Customer', 'Admin', 'Cliente'] })).toEqual(['Admin', 'Cliente']);
+    expect(tokenRoles({ roles: ['Operator', 'Customer', 'Admin', 'Cliente'] })).toEqual([
+      'Admin',
+      'Cliente',
+    ]);
     expect(tokenRoles({ roles: 'Admin' })).toEqual([]);
   });
   it('tolera JWT malformados y decodifica texto UTF-8', () => {
     expect(decodeJwtPayload('bad')).toEqual({});
     expect(decodeJwtPayload('x.??.y')).toEqual({});
-    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ name: 'María Ñúñez' })))).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ name: 'María Ñúñez' }))))
+      .replaceAll('=', '')
+      .replaceAll('+', '-')
+      .replaceAll('/', '_');
     expect(decodeJwtPayload('header.' + payload + '.signature')['name']).toBe('María Ñúñez');
   });
   it('formatea CLP y fechas chilenas, manteniendo faltantes explícitos', () => {

@@ -12,6 +12,7 @@ import { OrderStatusBadgeComponent } from '../../shared/order-status-badge.compo
 import { ClpPipe, LocalDatePipe } from '../../shared/format';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CustomersService, CustomerOption } from '../../services/customers.service';
 
 @Component({
@@ -192,6 +193,7 @@ export class OrderDetailComponent implements OnInit {
       !this.auth.hasRole('Admin') ||
       !this.status ||
       !this.transitions().includes(this.status) ||
+      this.order()?.version === null ||
       this.saving()
     )
       return;
@@ -199,7 +201,7 @@ export class OrderDetailComponent implements OnInit {
     this.error.set('');
     this.success.set('');
     this.service
-      .changeStatus(this.id, this.status)
+      .changeStatus(this.id, this.status, this.order()!.version!)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (order) => {
@@ -209,7 +211,10 @@ export class OrderDetailComponent implements OnInit {
         },
         error: (error) => {
           this.saving.set(false);
-          this.error.set(describeError(error));
+          if (error instanceof HttpErrorResponse && error.status === 409) {
+            this.error.set('El pedido cambió. Se cargó la versión más reciente; revisa el estado antes de intentar de nuevo.');
+            this.load();
+          } else this.error.set(describeError(error));
         },
       });
   }
