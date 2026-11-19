@@ -39,6 +39,15 @@ describe('Migración y permisos', () => {
       adaptProduct({ id: 3, nombre: 'Teclado', categoria: 'Periféricos', precio: 54990 }),
     ).toMatchObject({ name: 'Teclado', stock: null, price: 54990 });
   });
+  it('ordena el historial real y conserva el estado previo', () => {
+    const order = adaptOrder({ id: 7, history: [
+      { status: 'CREATED', changedAt: '2026-11-19T12:00:00Z', actorName: 'Admin' },
+      { previousStatus: 'CREATED', status: 'ACCEPTED', changedAt: '2026-11-19T13:00:00Z', actorName: 'Admin' },
+    ] });
+    expect(order.history.map((event) => event.status)).toEqual(['ACCEPTED', 'CREATED']);
+    expect(order.history[0].previousStatus).toBe('CREATED');
+    expect(order.history[1].previousStatus).toBeUndefined();
+  });
   it('preserva cero y no interpreta un estado desconocido como CREATED', () => {
     expect(adaptProduct({ id: '1', stock: 0, price: 0 }).stock).toBe(0);
     expect(adaptOrder({ id: '1', estado: 'DESPACHADO' })).toMatchObject({

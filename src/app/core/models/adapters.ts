@@ -44,6 +44,8 @@ export function adaptOrder(value: unknown): Order {
             const event = record(value);
             return {
               status: normalizeStatus(event['status']),
+              previousStatus: event['previousStatus'] == null
+                ? undefined : normalizeStatus(event['previousStatus']),
               changedAt: String(event['changedAt'] ?? ''),
               actorName: String(event['actorName'] ?? ''),
               actorRole: event['actorRole'] ? String(event['actorRole']) : undefined,

@@ -9,6 +9,8 @@ del formulario es provisional: el backend valida precio y stock, reserva las
 unidades y devuelve el total CLP definitivo. La solicitud incluye un UUID
 `requestId` para que un reintento no descuente stock dos veces. PUT envía
 `expectedVersion` y conserva el estado; PATCH cambia el estado.
+El historial muestra el estado anterior y el nuevo cuando el servidor los
+registró. Los pedidos antiguos sin eventos siguen indicando que no hay historial.
 
 ## Desarrollo
 

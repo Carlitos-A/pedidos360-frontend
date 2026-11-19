@@ -227,6 +227,9 @@
         <ol class="timeline">
           @for (event of order()?.history; track $index) {
             <li>
+              @if (event.previousStatus) {
+                <p class="muted small">{{ event.previousStatus }} → {{ event.status }}</p>
+              }
               <app-order-status-badge [status]="event.status" />
               <p class="muted">
                 {{ event.changedAt | localDate: true }} ·

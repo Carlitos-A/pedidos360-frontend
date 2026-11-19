@@ -9,6 +9,7 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type DisplayStatus = OrderStatus | 'UNKNOWN';
 export interface StatusEvent {
   status: DisplayStatus;
+  previousStatus?: DisplayStatus;
   changedAt: string;
   actorName: string;
   actorRole?: string;
