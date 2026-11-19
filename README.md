@@ -4,6 +4,12 @@ Aplicación Angular 22 para gestión de pedidos, catálogo, reportes y auditorí
 
 Los app roles válidos son `Admin` y `Cliente`. En pantalla, `Cliente` se muestra como **Customer**. Admin reúne también las tareas operativas; solo Admin puede crear pedidos. El backend debe filtrar por propietario los pedidos de Customer.
 
+Al crear un pedido, Admin selecciona productos asignados al Cliente. El total
+del formulario es provisional: el backend valida precio y stock, reserva las
+unidades y devuelve el total CLP definitivo. La solicitud incluye un UUID
+`requestId` para que un reintento no descuente stock dos veces. PUT envía
+`expectedVersion` y conserva el estado; PATCH cambia el estado.
+
 ## Desarrollo
 
 ```bash
