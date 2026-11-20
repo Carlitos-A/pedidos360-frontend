@@ -3,6 +3,7 @@ import { MsalBroadcastService, MsalService } from '@azure/msal-angular';
 import { Subject, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 const jwt = (roles: string[]) =>
   'header.' +
   btoa(
@@ -54,6 +55,7 @@ describe('AuthService conserva roles del access token', () => {
     await Promise.all([auth.ensureSession(), auth.ensureSession()]);
     expect(handle).toHaveBeenCalledTimes(1);
     expect(acquire).toHaveBeenCalledTimes(1);
+    expect(acquire.mock.calls[0][0].scopes).toEqual([environment.apiConfig.scopes[0]]);
     expect(auth.roles()).toEqual(['Cliente']);
     expect(auth.displayRole()).toBe('Customer');
     expect(auth.hasRole('Admin')).toBe(false);

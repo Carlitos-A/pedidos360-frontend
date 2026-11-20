@@ -86,7 +86,7 @@ export class AuthService {
     const account = this.msal.instance.getActiveAccount() ?? this.msal.instance.getAllAccounts()[0];
     if (!account) return of('');
     return this.msal
-      .acquireTokenSilent({ scopes: environment.apiConfig.scopes, account, forceRefresh })
+      .acquireTokenSilent({ scopes: [environment.apiConfig.scopes[0]], account, forceRefresh })
       .pipe(
         tap((result) => this.acceptToken(result)),
         map((result) => result.accessToken),
@@ -99,7 +99,7 @@ export class AuthService {
     this.error.set('');
     try {
       await this.initialize().catch(() => undefined);
-      await firstValueFrom(this.msal.loginRedirect({ scopes: environment.apiConfig.scopes }));
+      await firstValueFrom(this.msal.loginRedirect({ scopes: [environment.apiConfig.scopes[0]] }));
     } catch {
       this.error.set('No se pudo abrir Microsoft. Reintenta el inicio de sesión.');
     } finally {

@@ -14,6 +14,7 @@ import {
   MsalInterceptor,
   MsalGuardConfiguration,
   MsalInterceptorConfiguration,
+  ProtectedResourceScopes,
   MSAL_INSTANCE,
   MSAL_GUARD_CONFIG,
   MSAL_INTERCEPTOR_CONFIG,
@@ -42,7 +43,7 @@ export function MSALGuardConfigFactory(): MsalGuardConfiguration {
   return {
     interactionType: InteractionType.Redirect,
     authRequest: {
-      scopes: [...environment.apiConfig.scopes],
+      scopes: [environment.apiConfig.scopes[0]],
     },
     loginFailedRoute: '/login',
   };
@@ -50,10 +51,17 @@ export function MSALGuardConfigFactory(): MsalGuardConfiguration {
 
 // Configuración del Interceptor: adjunta el JWT solo a las llamadas al API
 export function MSALInterceptorConfigFactory(): MsalInterceptorConfiguration {
-  const protectedResourceMap = new Map<string, Array<string>>();
+  const protectedResourceMap = new Map<string, Array<ProtectedResourceScopes>>();
+  const [read, write] = environment.apiConfig.scopes;
   protectedResourceMap.set(
     `${environment.apiBaseUrl.replace(/\/$/, '')}/api/*`,
-    environment.apiConfig.scopes,
+    [
+      { httpMethod: 'GET', scopes: [read] },
+      { httpMethod: 'POST', scopes: [write] },
+      { httpMethod: 'PUT', scopes: [write] },
+      { httpMethod: 'PATCH', scopes: [write] },
+      { httpMethod: 'DELETE', scopes: [write] },
+    ],
   );
 
   return {

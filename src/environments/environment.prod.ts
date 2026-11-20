@@ -9,7 +9,12 @@ export const environment = {
     redirectUri: 'https://carlitos-a.github.io/pedidos360-frontend/auth/callback',
     postLogoutRedirectUri: 'https://carlitos-a.github.io/pedidos360-frontend/login',
   },
-  apiConfig: { scopes: ['api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d/pedidos.read'] },
+  apiConfig: {
+    scopes: [
+      'api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d/pedidos.read',
+      'api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d/pedidos.write',
+    ],
+  },
   reportsPollingMs: 30000,
   healthServices: [
     { key: 'bff', label: 'ms-pedidos360-bff' },
