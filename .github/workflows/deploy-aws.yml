@@ -1,0 +1,74 @@
+name: Publicar frontend en AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-frontend
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ vars.AWS_DEPLOY_ROLE_ARN != '' && vars.AWS_REGION != '' && vars.S3_BUCKET != '' && vars.CLOUDFRONT_DISTRIBUTION_ID != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Obtener codigo de main
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar Angular para CloudFront
+        env:
+          API_GATEWAY_URL: ${{ vars.API_GATEWAY_URL }}
+          ENTRA_TENANT_ID: ${{ vars.ENTRA_TENANT_ID }}
+          ENTRA_SPA_CLIENT_ID: ${{ vars.ENTRA_SPA_CLIENT_ID }}
+          ENTRA_API_APP_ID_URI: ${{ vars.ENTRA_API_APP_ID_URI }}
+          SPA_BASE_URL: ${{ vars.SPA_BASE_URL }}
+          API_MANAGER_CONSOLE_URL: ${{ vars.API_MANAGER_CONSOLE_URL }}
+          RABBITMQ_CONSOLE_URL: ${{ vars.RABBITMQ_CONSOLE_URL }}
+          KAFKA_CONSOLE_URL: ${{ vars.KAFKA_CONSOLE_URL }}
+        run: npm run build -- --base-href /
+
+      - name: Verificar configuracion AWS
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          for name in AWS_DEPLOY_ROLE_ARN AWS_REGION S3_BUCKET CLOUDFRONT_DISTRIBUTION_ID; do
+            if [ -z "${!name}" ]; then echo "Missing repository variable: $name" >&2; exit 1; fi
+          done
+
+      - name: Obtener credenciales temporales por OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Subir archivos a S3
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+        run: |
+          aws s3 sync dist/pedidos360-front/browser "s3://$S3_BUCKET/" --delete --cache-control "public,max-age=300"
+          aws s3 cp dist/pedidos360-front/browser/index.html "s3://$S3_BUCKET/index.html" --content-type "text/html" --cache-control "no-cache,no-store,must-revalidate"
+
+      - name: Invalidar CloudFront
+        env:
+          CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"

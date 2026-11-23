@@ -22,11 +22,34 @@ npm install
 npm start
 ```
 
-Registrar `http://localhost:4200/auth/callback` como redirect URI SPA en Entra ID. Configurar `apiBaseUrl`, IDs, scopes, URLs de consolas y servicios de health en [`src/environments/environment.ts`](src/environments/environment.ts) y su variante de producción. MSAL gestiona su caché.
+Registrar `http://localhost:4200/auth/callback` como redirect URI SPA en Entra ID.
+Copiar [`.env.local.example`](.env.local.example) a `.env.local` y completar sus
+cinco valores públicos. `npm start`, `npm test` y `npm run build` generan los
+archivos de `src/environments` antes de ejecutar Angular. No poner secretos en
+`.env.local`: los valores de la SPA se incluyen en el JavaScript publicado.
+`API_GATEWAY_URL` es la raíz HTTPS del gateway, sin `/api`; la aplicación agrega
+`/api/*`. `ENTRA_API_APP_ID_URI` es el identificador de la API, del cual se
+forman `pedidos.read` y `pedidos.write`. `SPA_BASE_URL` es el origen raíz del sitio,
+por ejemplo `https://d123456abcdef.cloudfront.net` (sin barra final).
+Para `npm run build`, `SPA_BASE_URL` debe ser HTTPS; el valor localhost del
+ejemplo sirve solo para `npm start` y `npm test`.
+
+El workflow de AWS lee esas mismas cinco claves desde **Repository
+variables** y publica el build en un bucket S3 privado detrás de CloudFront.
+También requiere `AWS_DEPLOY_ROLE_ARN`, `AWS_REGION`, `S3_BUCKET` y
+`CLOUDFRONT_DISTRIBUTION_ID` como variables del repositorio. El rol se asume
+con OIDC de GitHub y debe confiar solo en `main` de este repositorio. Configure
+CloudFront con OAC, `index.html` como objeto raíz y respuestas 403/404 hacia
+`/index.html` con HTTP 200 para rutas internas de Angular. El job se omite
+hasta que estén configuradas las cuatro variables de AWS; una vez configuradas,
+las cinco variables públicas son obligatorias. La URL
+del gateway, los IDs de Entra y los scopes son configuración pública; las claves
+de Graph, bases de datos, RabbitMQ y servicios internos permanecen solo en el
+backend. MSAL gestiona su caché.
 
 ```bash
 npm test -- --watch=false
 npm run build
 ```
 
-Las rutas y los pasos de prueba por rol están en [ROUTES_AND_TESTING.md](ROUTES_AND_TESTING.md). Los contratos, migraciones y cambios necesarios en el backend están en [TODO.md](TODO.md). Los endpoints nuevos pueden fallar hasta que API Manager/BFF y los servicios de reportes y auditoría los implementen.
+Las rutas y los pasos de prueba por rol están en [ROUTES_AND_TESTING.md](ROUTES_AND_TESTING.md). Los contratos, migraciones y cambios necesarios en el backend están en [TODO.md](TODO.md). Los servicios de reportes y auditoría ya están en el backend; las rutas del API Gateway y los recursos AWS se configurarán al desplegar.
