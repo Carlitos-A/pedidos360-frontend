@@ -2,16 +2,27 @@ import { Injectable, inject, signal } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AppRole } from './jwt';
+import { CustomersService } from '../../services/customers.service';
 @Injectable({ providedIn: 'root' })
 export class AccessNotice {
   readonly message = signal('');
 }
+const customerRegistrationError = 'No se pudo registrar tu cuenta en Pedidos360. Reintenta al entrar en otra sección.';
 export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
+  const customers = inject(CustomersService);
   const router = inject(Router);
   try {
     await auth.ensureSession();
-    if (auth.isAuthenticated()) return true;
+    if (auth.isAuthenticated()) {
+      try {
+        await customers.ensureRegistered();
+        if (auth.error() === customerRegistrationError) auth.error.set('');
+      } catch {
+        auth.error.set(customerRegistrationError);
+      }
+      return true;
+    }
   } catch {
     auth.error.set('No se pudo validar tu sesión. Vuelve a iniciar sesión.');
   }

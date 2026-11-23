@@ -4,13 +4,19 @@ Aplicación Angular 22 para gestión de pedidos, catálogo, reportes y auditorí
 
 Los app roles válidos son `Admin` y `Cliente`. En pantalla, `Cliente` se muestra como **Customer**. Admin reúne también las tareas operativas; solo Admin puede crear pedidos. El backend debe filtrar por propietario los pedidos de Customer.
 
+Cada Cliente se registra al abrir una ruta protegida: la SPA envía su access
+token a `POST /api/customers/me` con `pedidos.read`. El servidor guarda la
+identidad del JWT para que Admin pueda seleccionarla al crear un pedido. El
+Cliente debe ingresar al menos una vez antes de aparecer en la búsqueda. No
+se requiere una aplicación confidencial ni permisos de Microsoft Graph.
+
 Al crear un pedido, Admin selecciona productos asignados al Cliente. El total
 del formulario es provisional: el backend valida precio y stock, reserva las
 unidades y devuelve el total CLP definitivo. La solicitud incluye un UUID
 `requestId` para que un reintento no descuente stock dos veces. PUT envía
 `expectedVersion` y conserva el estado; PATCH cambia el estado.
 La sesión y GET solicitan `pedidos.read`; POST, PUT, PATCH y DELETE solicitan
-`pedidos.write` al llamar a la API. Entra debe exponer y conceder ese scope a
+`pedidos.write` al llamar a la API, excepto el registro propio anterior. Entra debe exponer y conceder ese scope a
 la SPA antes de desplegar esta configuración de frontend.
 El historial muestra el estado anterior y el nuevo cuando el servidor los
 registró. Los pedidos antiguos sin eventos siguen indicando que no hay historial.
@@ -29,8 +35,8 @@ archivos de `src/environments` antes de ejecutar Angular. No poner secretos en
 `.env.local`: los valores de la SPA se incluyen en el JavaScript publicado.
 `API_GATEWAY_URL` es la raíz HTTPS del gateway, sin `/api`; la aplicación agrega
 `/api/*`. `ENTRA_API_APP_ID_URI` es el identificador de la API, del cual se
-forman `pedidos.read` y `pedidos.write`. `SPA_BASE_URL` es el origen raíz del sitio,
-por ejemplo `https://d123456abcdef.cloudfront.net` (sin barra final).
+forman `pedidos.read` y `pedidos.write`. Para el sitio actual en GitHub Pages,
+`SPA_BASE_URL=https://carlitos-a.github.io/pedidos360-frontend` (sin barra final).
 Para `npm run build`, `SPA_BASE_URL` debe ser HTTPS; el valor localhost del
 ejemplo sirve solo para `npm start` y `npm test`.
 
@@ -44,7 +50,7 @@ CloudFront con OAC, `index.html` como objeto raíz y respuestas 403/404 hacia
 hasta que estén configuradas las cuatro variables de AWS; una vez configuradas,
 las cinco variables públicas son obligatorias. La URL
 del gateway, los IDs de Entra y los scopes son configuración pública; las claves
-de Graph, bases de datos, RabbitMQ y servicios internos permanecen solo en el
+de bases de datos, RabbitMQ y servicios internos permanecen solo en el
 backend. MSAL gestiona su caché.
 
 ```bash
