@@ -5,8 +5,9 @@ import { forkJoin } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { OrdersService } from '../../services/orders.service';
+import { OrderWorkService } from '../../services/order-work.service';
 import { ReportsService } from '../../services/reports.service';
-import { Kpis, Order, ORDER_STATUSES, Page, SalesPoint } from '../../core/models/api.models';
+import { Kpis, Order, OrderNotification, ORDER_STATUSES, Page, SalesPoint } from '../../core/models/api.models';
 import { nextStatus } from '../../core/models/adapters';
 import { describeError } from '../../core/interceptors/api-error.interceptor';
 import { Resource } from '../../shared/resource';
@@ -34,11 +35,13 @@ import { LineChartComponent } from '../../shared/line-chart.component';
 export class DashboardComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly orders = inject(OrdersService);
+  private readonly orderWork = inject(OrderWorkService);
   private readonly reports = inject(ReportsService);
   private readonly destroyRef = inject(DestroyRef);
   readonly kpis = new Resource<Kpis | null>(null);
   readonly sales = new Resource<SalesPoint[]>([]);
   readonly recent = new Resource<Page<Order>>({ items: [], total: 0, page: 0, pageSize: 5 });
+  readonly notifications = new Resource<Page<OrderNotification>>({ items: [], total: 0, page: 0, pageSize: 5 });
   readonly operations = new Resource<{
     pending: Page<Order>;
     accepted: Page<Order>;
@@ -63,6 +66,7 @@ export class DashboardComponent implements OnInit {
   load(): void {
     if (!this.auth.hasRole('Admin', 'Cliente')) return;
     this.loadRecent();
+    if (this.auth.hasRole('Cliente') && !this.auth.hasRole('Admin')) this.loadNotifications();
     if (this.auth.hasRole('Admin')) {
       this.loadKpis();
       this.loadSales();
@@ -71,6 +75,9 @@ export class DashboardComponent implements OnInit {
   }
   loadRecent(): void {
     this.recent.load(this.orders.list({ pageSize: 5 }));
+  }
+  loadNotifications(): void {
+    this.notifications.load(this.orderWork.notifications());
   }
   loadKpis(): void {
     this.kpis.load(this.reports.kpis());

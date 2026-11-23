@@ -243,6 +243,33 @@
         }
       </app-load-state>
     }
+    @if (auth.hasRole('Cliente') && !auth.hasRole('Admin')) {
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <h2>Mis avisos</h2>
+            <p class="muted">Notificaciones dentro de Pedidos360, sin correo ni webpush.</p>
+          </div>
+          <button class="secondary compact" (click)="loadNotifications()">Actualizar</button>
+        </div>
+        <app-load-state
+          [loading]="notifications.loading()"
+          [error]="notifications.error()"
+          [empty]="!notifications.data().items.length"
+          emptyText="Aún no tienes avisos. Los pedidos siguen disponibles aunque este servicio tarde."
+          (retry)="loadNotifications()"
+        >
+          <ol class="timeline">
+            @for (notice of notifications.data().items; track notice.id) {
+              <li>
+                <a [routerLink]="['/orders', notice.orderId]">{{ notice.message }}</a>
+                <p class="muted small">{{ notice.occurredAt | localDate: true }}</p>
+              </li>
+            }
+          </ol>
+        </app-load-state>
+      </section>
+    }
     <section class="card">
       <div class="section-heading">
         <div>

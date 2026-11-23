@@ -216,6 +216,39 @@
         <p class="muted small">Tu pedido está disponible en modo de consulta.</p>
       }
     </section>
+    @if (!isNew() && order()) {
+      <section class="card">
+        <div class="section-heading">
+          <div>
+            <h2>Comprobante</h2>
+            <p class="muted">Se genera en segundo plano al confirmar el pedido.</p>
+          </div>
+          <button class="secondary compact" [disabled]="ticketLoading()" (click)="loadTicket()">
+            {{ ticketLoading() ? 'Consultando…' : 'Ver comprobante' }}
+          </button>
+        </div>
+        @if (ticketError()) { <p class="muted" role="status">{{ ticketError() }}</p> }
+        @if (ticket(); as receipt) {
+          <button class="secondary compact" (click)="downloadTicket()">Descargar comprobante</button>
+          <dl class="detail-list">
+            <dt>Número</dt><dd>{{ receipt.ticketNumber }}</dd>
+            <dt>Emitido</dt><dd>{{ receipt.issuedAt | localDate: true }}</dd>
+            <dt>Cliente</dt><dd>{{ receipt.customerName }}</dd>
+            <dt>Total</dt><dd>{{ receipt.total | clp }}</dd>
+          </dl>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th></tr></thead>
+              <tbody>
+                @for (item of receipt.items; track item.productId) {
+                  <tr><td>{{ item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.unitPrice | clp }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
     <section class="card">
       <h2>Historial de estados</h2>
       <p class="muted">Eventos del pedido</p>

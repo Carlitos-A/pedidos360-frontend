@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OrdersService } from '../../services/orders.service';
-import { Order, OrderInput, OrderStatus } from '../../core/models/api.models';
+import { OrderWorkService } from '../../services/order-work.service';
+import { Order, OrderInput, OrderStatus, OrderTicket } from '../../core/models/api.models';
 import { allowedTransitions } from '../../core/models/adapters';
 import { describeError } from '../../core/interceptors/api-error.interceptor';
 import { LoadStateComponent } from '../../shared/load-state.component';
@@ -32,6 +33,7 @@ import { Product, OrderItem } from '../../core/models/api.models';
 export class OrderDetailComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly service = inject(OrdersService);
+  private readonly orderWork = inject(OrderWorkService);
   private readonly customers = inject(CustomersService);
   private readonly products = inject(ProductsService);
   private readonly route = inject(ActivatedRoute);
@@ -43,6 +45,9 @@ export class OrderDetailComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal('');
   readonly success = signal('');
+  readonly ticket = signal<OrderTicket | null>(null);
+  readonly ticketLoading = signal(false);
+  readonly ticketError = signal('');
   readonly customerOptions = signal<CustomerOption[]>([]);
   readonly customerError = signal('');
   readonly customerLoading = signal(false);
@@ -64,11 +69,13 @@ export class OrderDetailComponent implements OnInit {
   form: Omit<OrderInput, 'total'> & { total: number | null } = this.empty();
   private id = '';
   private request?: Subscription;
+  private ticketRequest?: Subscription;
   private catalogRequest?: Subscription;
   private createRequestId = crypto.randomUUID();
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.request?.unsubscribe();
+      this.ticketRequest?.unsubscribe();
       this.catalogRequest?.unsubscribe();
       this.loading.set(false);
       this.id = params.get('id') ?? '';
@@ -76,6 +83,9 @@ export class OrderDetailComponent implements OnInit {
       this.order.set(null);
       this.error.set('');
       this.success.set('');
+      this.ticket.set(null);
+      this.ticketLoading.set(false);
+      this.ticketError.set('');
       this.loadError.set('');
       this.form = this.empty();
       this.customerOptions.set([]);
@@ -140,6 +150,49 @@ export class OrderDetailComponent implements OnInit {
           this.loading.set(false);
         },
       });
+  }
+  loadTicket(): void {
+    if (!this.id || this.ticketLoading()) return;
+    this.ticketRequest?.unsubscribe();
+    this.ticketLoading.set(true);
+    this.ticketError.set('');
+    this.ticket.set(null);
+    this.ticketRequest = this.orderWork.ticket(this.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (ticket) => { this.ticket.set(ticket); this.ticketLoading.set(false); },
+      error: (error) => {
+        this.ticketLoading.set(false);
+        this.ticketError.set(error instanceof HttpErrorResponse && error.status === 404
+          ? 'El comprobante aún no está disponible. Puedes volver a consultarlo.'
+          : describeError(error));
+      },
+    });
+  }
+  downloadTicket(): void {
+    const receipt = this.ticket();
+    if (!receipt) return;
+    const money = (value: number) => new Intl.NumberFormat('es-CL', {
+      style: 'currency', currency: 'CLP', maximumFractionDigits: 0,
+    }).format(value);
+    const oneLine = (value: string) => value.replace(/[\r\n]+/g, ' ').trim();
+    const lines = [
+      'PEDIDOS360 · COMPROBANTE INTERNO',
+      `Número: ${receipt.ticketNumber}`,
+      `Pedido: #${receipt.orderId}`,
+      `Cliente: ${oneLine(receipt.customerName)}`,
+      `Creado: ${receipt.createdAt}`,
+      `Emitido: ${receipt.issuedAt}`,
+      '',
+      ...receipt.items.map((item) =>
+        `${oneLine(item.name)} · ${item.quantity} × ${money(item.unitPrice)} = ${money(item.quantity * item.unitPrice)}`),
+      '',
+      `TOTAL: ${money(receipt.total)}`,
+    ];
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${receipt.ticketNumber}.txt`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
   addItem(): void {
     if (this.isTerminal()) return;

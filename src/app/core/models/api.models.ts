@@ -68,6 +68,21 @@ export interface Page<T> {
   page: number;
   pageSize: number;
 }
+export interface OrderNotification {
+  id: number;
+  orderId: number;
+  message: string;
+  occurredAt: string;
+}
+export interface OrderTicket {
+  ticketNumber: string;
+  orderId: number;
+  customerName: string;
+  total: number;
+  createdAt: string;
+  issuedAt: string;
+  items: OrderItem[];
+}
 export interface OrderFilters {
   q?: string;
   status?: string;
