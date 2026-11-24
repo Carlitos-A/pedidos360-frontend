@@ -39,58 +39,34 @@
               [value]="money(stats.monthlySales)"
               note="Pesos chilenos · mes actual"
             />
-            <app-kpi-card
-              label="Usuarios activos"
-              [value]="number(stats.activeUsers)"
-              note="Usuarios únicos en los últimos 30 días"
-            />
-            <app-kpi-card
-              label="Lead time promedio"
-              [value]="number(stats.averageLeadTimeDays, ' d')"
-              note="Desde creación hasta completado"
-            />
           </div>
         }
       </app-load-state>
-      <div class="two-columns">
-        <section class="card">
-          <h2>Pedidos por mes</h2>
-          <p class="muted">Últimos 12 meses</p>
-          <app-load-state
-            [loading]="sales.loading()"
-            [error]="sales.error()"
-            [empty]="!sales.data().length"
-            (retry)="loadSales()"
-          >
-            <app-line-chart [points]="chartPoints()" label="Cantidad de pedidos por mes" />
-          </app-load-state>
-        </section>
-        <section class="card">
-          <h2>Pedidos por estado</h2>
-          <p class="muted">Distribución actual</p>
-          <app-load-state
-            [loading]="kpis.loading()"
-            [error]="kpis.error()"
-            [empty]="!kpis.data()"
-            (retry)="loadKpis()"
-          >
-            @for (status of statuses; track status) {
-              <div class="bar-row">
-                <div class="bar-label">
-                  <strong>{{ status }}</strong
-                  ><span class="muted">{{ number(kpis.data()?.byStatus?.[status], ' u.') }}</span>
-                </div>
-                <div class="bar-track">
-                  <div
-                    class="bar-fill"
-                    [style.width.%]="statusWidth(kpis.data()?.byStatus?.[status] ?? 0)"
-                  ></div>
-                </div>
+      <section class="card">
+        <h2>Pedidos por estado</h2>
+        <p class="muted">Distribución actual</p>
+        <app-load-state
+          [loading]="kpis.loading()"
+          [error]="kpis.error()"
+          [empty]="!kpis.data()"
+          (retry)="loadKpis()"
+        >
+          @for (status of statuses; track status) {
+            <div class="bar-row">
+              <div class="bar-label">
+                <strong>{{ status }}</strong
+                ><span class="muted">{{ number(kpis.data()?.byStatus?.[status], ' u.') }}</span>
               </div>
-            }
-          </app-load-state>
-        </section>
-      </div>
+              <div class="bar-track">
+                <div
+                  class="bar-fill"
+                  [style.width.%]="statusWidth(kpis.data()?.byStatus?.[status] ?? 0)"
+                ></div>
+              </div>
+            </div>
+          }
+        </app-load-state>
+      </section>
       <app-load-state
         [loading]="kpis.loading()"
         [error]="kpis.error()"
