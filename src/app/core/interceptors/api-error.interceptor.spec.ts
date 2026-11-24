@@ -46,13 +46,13 @@ describe('Recuperación HTTP limitada a un reintento', () => {
     backend.expectOne(apiUrl('/orders')).flush('', { status: 401, statusText: 'Unauthorized' });
     backend.expectOne(apiUrl('/orders')).flush('', { status: 401, statusText: 'Unauthorized' });
     expect(refresh).toHaveBeenCalledTimes(1);
-    expect(login).toHaveBeenCalledTimes(1);
+    expect(login).not.toHaveBeenCalled();
   });
-  it('inicia login si falla la renovación', () => {
+  it('deja visible el 401 si falla la renovación', () => {
     refresh.mockReturnValue(throwError(() => new Error('expired')));
     http.get(apiUrl('/orders')).subscribe({ error: () => {} });
     backend.expectOne(apiUrl('/orders')).flush('', { status: 401, statusText: 'Unauthorized' });
-    expect(login).toHaveBeenCalledTimes(1);
+    expect(login).not.toHaveBeenCalled();
   });
   it('muestra Sin permisos ante 403', () => {
     http.get(apiUrl('/orders')).subscribe({ error: () => {} });

@@ -40,20 +40,13 @@ export class ApiErrorInterceptor implements HttpInterceptor {
         if (error.status === 403) this.notice.message.set('Sin permisos');
         if (error.status !== 401) return throwError(() => error);
         return this.auth.getAccessToken(true).pipe(
-          catchError((refreshError) => {
-            void this.auth.login();
-            return throwError(() => refreshError);
-          }),
+          catchError(() => throwError(() => error)),
           switchMap((token) => {
-            if (!token) {
-              void this.auth.login();
-              return throwError(() => error);
-            }
+            if (!token) return throwError(() => error);
             return next
               .handle(req.clone({ setHeaders: { Authorization: 'Bearer ' + token } }))
               .pipe(
                 catchError((retryError) => {
-                  if (retryError.status === 401) void this.auth.login();
                   if (retryError.status === 403) this.notice.message.set('Sin permisos');
                   return throwError(() => retryError);
                 }),
