@@ -3,6 +3,11 @@ import { HttpBackend, HttpClient, HttpErrorResponse, HttpHeaders } from '@angula
 import { catchError, map, of, timeout } from 'rxjs';
 import { apiUrl } from './api';
 export type ValidationCase = 'valid' | 'missing' | 'tampered' | 'expired';
+export interface RabbitDemoResult {
+  action: 'reject' | 'clear';
+  messageId: string | null;
+  queue: string;
+}
 export interface ValidationResult {
   kind: ValidationCase;
   expected: number;
@@ -23,8 +28,12 @@ export function tamperSignature(token: string): string {
 }
 @Injectable({ providedIn: 'root' })
 export class EvidenceService {
+  private readonly http = inject(HttpClient);
   // HttpBackend evita tanto MsalInterceptor como la recuperación automática del 401.
   private readonly raw = new HttpClient(inject(HttpBackend));
+  rabbitDemo(action: 'reject' | 'clear') {
+    return this.http.post<RabbitDemoResult>(apiUrl('/orders/demo/rabbit'), { action });
+  }
   run(kind: ValidationCase, token = '') {
     const expected = kind === 'valid' ? 200 : 401;
     const headers =

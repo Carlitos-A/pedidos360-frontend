@@ -54,6 +54,9 @@ export class EvidenceComponent implements OnInit {
   expiredToken = '';
   readonly inspector = environment.jwtInspectorUrl;
   readonly rabbitMqConsole = environment.consoles.rabbitMq;
+  readonly rabbitDemoRunning = signal(false);
+  readonly rabbitDemoMessage = signal('');
+  readonly rabbitDemoError = signal('');
   ngOnInit(): void {
     void this.loadToken();
     this.loadHealth();
@@ -94,6 +97,22 @@ export class EvidenceComponent implements OnInit {
       this.feedback.set('Token copiado al portapapeles.');
     } catch {
       this.feedback.set('No se pudo copiar el token. Comprueba el permiso del portapapeles.');
+    }
+  }
+  async runRabbitDemo(action: 'reject' | 'clear'): Promise<void> {
+    if (this.rabbitDemoRunning() || !this.auth.hasRole('Admin')) return;
+    this.rabbitDemoRunning.set(true);
+    this.rabbitDemoError.set('');
+    this.rabbitDemoMessage.set('');
+    try {
+      const result = await firstValueFrom(this.service.rabbitDemo(action));
+      this.rabbitDemoMessage.set(action === 'reject'
+        ? `Mensaje ${result.messageId} enviado. Espera unos segundos y actualiza ${result.queue} en RabbitMQ.`
+        : `Cola de demostración ${result.queue} vaciada. Puedes repetir la prueba.`);
+    } catch (error) {
+      this.rabbitDemoError.set(describeError(error));
+    } finally {
+      this.rabbitDemoRunning.set(false);
     }
   }
   async run(kind: ValidationCase): Promise<void> {

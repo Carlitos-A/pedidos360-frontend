@@ -118,6 +118,21 @@
     } @else {
       <p class="small muted">Enlace pendiente de configuración.</p>
     }
+    <div class="actions" style="margin-top: 1rem">
+      <button type="button" [disabled]="rabbitDemoRunning()" (click)="runRabbitDemo('reject')">
+        Enviar mensaje fallido
+      </button>
+      <button type="button" class="secondary" [disabled]="rabbitDemoRunning()" (click)="runRabbitDemo('clear')">
+        Limpiar cola de prueba
+      </button>
+    </div>
+    <p class="small muted">La prueba usa una cola aislada. El consumidor rechaza el mensaje y su DLQ lo conserva para verlo en RabbitMQ.</p>
+    @if (rabbitDemoMessage()) {
+      <p class="success" role="status">{{ rabbitDemoMessage() }}</p>
+    }
+    @if (rabbitDemoError()) {
+      <p class="error" role="alert">{{ rabbitDemoError() }}</p>
+    }
   </section>
   <section class="card">
     <h2>Pruebas de validación JWT en API Manager</h2>
