@@ -32,12 +32,6 @@ import { Product, ProductInput } from '../../core/models/api.models';
           maxlength="100"
           placeholder="Ej.: Periféricos"
       /></label>
-      <label
-        >ID de Cliente (oid)<input name="customerId" [(ngModel)]="form.customerId" required
-          placeholder="ID de Entra del Cliente" /></label>
-      <label
-        >ID del tenant (tid)<input name="customerTenantId" [(ngModel)]="form.customerTenantId" required
-          placeholder="ID del tenant de Entra" /></label>
       <div class="form-grid">
         <label
           >Precio (CLP)<input
@@ -85,8 +79,6 @@ export class ProductFormComponent {
   form: Omit<ProductInput, 'price' | 'stock'> & { price: number | null; stock: number | null } = {
     name: '',
     category: '',
-    customerId: '',
-    customerTenantId: '',
     price: null,
     stock: null,
   };
@@ -98,8 +90,6 @@ export class ProductFormComponent {
       this.form = {
         name: product?.name ?? '',
         category: product?.category ?? '',
-        customerId: product?.customerId ?? '',
-        customerTenantId: product?.customerTenantId ?? '',
         price: product?.price ?? null,
         stock: product?.stock ?? null,
       };
@@ -111,8 +101,6 @@ export class ProductFormComponent {
     if (
       !this.form.name.trim() ||
       !this.form.category.trim() ||
-      !this.form.customerId.trim() ||
-      !this.form.customerTenantId.trim() ||
       this.form.price === null ||
       this.form.stock === null ||
       !Number.isSafeInteger(this.form.price) ||
@@ -120,7 +108,7 @@ export class ProductFormComponent {
       !Number.isInteger(this.form.stock) ||
       this.form.stock < 0
     ) {
-      this.validation = 'Ingresa cliente, tenant, nombre, categoría, precio válido y stock entero no negativo.';
+      this.validation = 'Ingresa nombre, categoría, precio válido y stock entero no negativo.';
       return;
     }
     this.validation = '';
@@ -128,8 +116,6 @@ export class ProductFormComponent {
       ...this.form,
       name: this.form.name.trim(),
       category: this.form.category.trim(),
-      customerId: this.form.customerId.trim(),
-      customerTenantId: this.form.customerTenantId.trim(),
       price: this.form.price!,
       stock: this.form.stock!,
     });

@@ -10,7 +10,8 @@ identidad del JWT para que Admin pueda seleccionarla al crear un pedido. El
 Cliente debe ingresar al menos una vez antes de aparecer en la búsqueda. No
 se requiere una aplicación confidencial ni permisos de Microsoft Graph.
 
-Al crear un pedido, Admin selecciona productos asignados al Cliente. El total
+Admin crea productos en un catálogo compartido sin indicar identidades de Entra.
+Al crear un pedido, selecciona al Cliente registrado y productos del catálogo. El total
 del formulario es provisional: el backend valida precio y stock, reserva las
 unidades y devuelve el total CLP definitivo. La solicitud incluye un UUID
 `requestId` para que un reintento no descuente stock dos veces. PUT envía

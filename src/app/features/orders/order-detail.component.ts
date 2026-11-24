@@ -54,8 +54,6 @@ export class OrderDetailComponent implements OnInit {
   readonly catalog = signal<Product[]>([]);
   readonly catalogError = signal('');
   readonly availableProducts = computed(() => this.catalog().filter((product) =>
-    product.customerId === this.form.customerId &&
-    product.customerTenantId === this.form.customerTenantId &&
     product.price !== null && Number.isSafeInteger(product.price) &&
     product.stock !== null));
   customerQuery = '';

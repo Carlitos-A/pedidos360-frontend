@@ -47,7 +47,7 @@
           @if (isNew()) {
             <div class="span-2">
               <label>Buscar Cliente<input name="customerQuery" [(ngModel)]="customerQuery"
-                placeholder="Nombre en Microsoft Entra" /></label>
+                placeholder="Nombre o correo del Cliente registrado" /></label>
               <button type="button" class="secondary compact" [disabled]="customerLoading()" (click)="searchCustomers()">Buscar</button>
               @if (customerError()) { <p class="error">{{ customerError() }}</p> }
               <label>Cuenta verificada<select name="selectedCustomer" [ngModel]="selectedCustomerId"
@@ -83,7 +83,7 @@
             <div class="section-heading">
               <div>
                 <h3>Productos del pedido</h3>
-                <p>Selecciona productos de este cliente. El servidor confirmará precios, stock y total.</p>
+                <p>Selecciona productos del catálogo. El servidor confirmará precios, stock y total.</p>
               </div>
               <button type="button" class="secondary compact" [disabled]="isTerminal() || !availableProducts().length" (click)="addItem()">
                 + Agregar producto
