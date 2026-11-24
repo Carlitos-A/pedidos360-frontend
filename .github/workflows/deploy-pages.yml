@@ -1,0 +1,53 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Angular
+        env:
+          API_GATEWAY_URL: https://f3aix34y6l.execute-api.us-east-1.amazonaws.com
+          ENTRA_TENANT_ID: bb5324af-c266-41ed-b36c-a971641c7af2
+          ENTRA_SPA_CLIENT_ID: fc50b5a6-c939-4a31-83c4-02fb87246356
+          ENTRA_API_APP_ID_URI: api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d
+          SPA_BASE_URL: https://carlitos-a.github.io/pedidos360-frontend
+        run: npm run build -- --base-href /pedidos360-frontend/
+      - name: Prepare Angular routes
+        run: |
+          cp dist/pedidos360-front/browser/index.html dist/pedidos360-front/browser/404.html
+          touch dist/pedidos360-front/browser/.nojekyll
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/pedidos360-front/browser
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4
