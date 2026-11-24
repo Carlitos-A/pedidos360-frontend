@@ -163,21 +163,4 @@
       expiración.
     </p>
   </section>
-  <section class="card">
-    <h2>Accesos rápidos a consolas</h2>
-    <p class="muted">Abre las herramientas de infraestructura para la demo.</p>
-    <div class="console-links">
-      @for (console of consoles; track console.label) {
-        @if (console.url) {
-          <a class="console-link" [href]="console.url" target="_blank" rel="noopener noreferrer"
-            >{{ console.label }} ↗<span>{{ console.detail }}</span></a
-          >
-        } @else {
-          <div class="console-link">
-            {{ console.label }}<span>URL pendiente de configurar</span>
-          </div>
-        }
-      }
-    </div>
-  </section>
 </div>

@@ -58,7 +58,6 @@ const source = `// Generated at build time. Public values; do not place secrets 
 `  apiConfig: { scopes: [${json(`${apiUri}/pedidos.read`)}, ${json(`${apiUri}/pedidos.write`)}] },\n` +
 `  reportsPollingMs: 30000,\n` +
 `  healthServices: [\n` +
-`    { key: 'bff', label: 'ms-pedidos360-bff' },\n` +
 `    { key: 'orders', label: 'ms-pedidos360-orders' },\n` +
 `    { key: 'products', label: 'ms-pedidos360-products' },\n` +
 `    { key: 'report', label: 'ms-pedidos360-report' },\n` +

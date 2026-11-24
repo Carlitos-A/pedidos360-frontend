@@ -53,20 +53,6 @@ export class EvidenceComponent implements OnInit {
   readonly testError = signal('');
   expiredToken = '';
   readonly inspector = environment.jwtInspectorUrl;
-  readonly consoles = [
-    { label: 'API Manager', detail: 'APIs y políticas', url: environment.consoles.apiManager },
-    {
-      label: 'Microsoft Entra ID',
-      detail: 'Tenant y usuarios',
-      url: environment.consoles.identity,
-    },
-    {
-      label: 'RabbitMQ Management',
-      detail: 'Colas y exchanges',
-      url: environment.consoles.rabbitMq,
-    },
-    { label: 'Kafka-UI', detail: 'Tópicos y consumidores', url: environment.consoles.kafka },
-  ];
   ngOnInit(): void {
     void this.loadToken();
     this.loadHealth();
