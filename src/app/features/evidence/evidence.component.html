@@ -112,9 +112,6 @@
         target="_blank"
         rel="noopener noreferrer"
       >Abrir panel RabbitMQ ↗</a>
-      <p class="small muted" style="margin-top: 1rem">
-        Abre primero el túnel SSH. localhost:15672 corresponde a este computador, no a la EC2.
-      </p>
     } @else {
       <p class="small muted">Enlace pendiente de configuración.</p>
     }
@@ -126,7 +123,7 @@
         Limpiar cola de prueba
       </button>
     </div>
-    <p class="small muted">La prueba usa una cola aislada. El consumidor rechaza el mensaje y su DLQ lo conserva para verlo en RabbitMQ.</p>
+
     @if (rabbitDemoMessage()) {
       <p class="success" role="status">{{ rabbitDemoMessage() }}</p>
     }
