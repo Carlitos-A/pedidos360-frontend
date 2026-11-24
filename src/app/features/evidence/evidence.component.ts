@@ -53,6 +53,7 @@ export class EvidenceComponent implements OnInit {
   readonly testError = signal('');
   expiredToken = '';
   readonly inspector = environment.jwtInspectorUrl;
+  readonly rabbitMqConsole = environment.consoles.rabbitMq;
   ngOnInit(): void {
     void this.loadToken();
     this.loadHealth();

@@ -103,6 +103,23 @@
     </section>
   </div>
   <section class="card">
+    <h2>RabbitMQ Management</h2>
+    <p class="muted">Consulta los nodos, exchanges, colas y mensajes desde el panel de RabbitMQ.</p>
+    @if (rabbitMqConsole) {
+      <a
+        class="button secondary"
+        [href]="rabbitMqConsole"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Abrir panel RabbitMQ ↗</a>
+      <p class="small muted" style="margin-top: 1rem">
+        Abre primero el túnel SSH. localhost:15672 corresponde a este computador, no a la EC2.
+      </p>
+    } @else {
+      <p class="small muted">Enlace pendiente de configuración.</p>
+    }
+  </section>
+  <section class="card">
     <h2>Pruebas de validación JWT en API Manager</h2>
     <p class="muted">Ejecuta cada caso para obtener su respuesta real.</p>
     <div class="actions">

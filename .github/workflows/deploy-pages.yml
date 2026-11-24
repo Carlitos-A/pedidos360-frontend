@@ -34,6 +34,7 @@ jobs:
           ENTRA_SPA_CLIENT_ID: fc50b5a6-c939-4a31-83c4-02fb87246356
           ENTRA_API_APP_ID_URI: api://6c685bd4-57e4-4ba3-aa63-c8bd6a00cd4d
           SPA_BASE_URL: https://carlitos-a.github.io/pedidos360-frontend
+          RABBITMQ_CONSOLE_URL: http://localhost:15672/
         run: npm run build -- --base-href /pedidos360-frontend/
       - name: Prepare Angular routes
         run: |
