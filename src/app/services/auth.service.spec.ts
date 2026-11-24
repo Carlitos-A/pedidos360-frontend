@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MsalBroadcastService, MsalService } from '@azure/msal-angular';
+import { Router } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from './auth.service';
@@ -19,6 +20,9 @@ const jwt = (roles: string[]) =>
 describe('AuthService conserva roles del access token', () => {
   let acquire: ReturnType<typeof vi.fn>;
   let handle: ReturnType<typeof vi.fn>;
+  let clearCache: ReturnType<typeof vi.fn>;
+  let logoutRedirect: ReturnType<typeof vi.fn>;
+  let navigateByUrl: ReturnType<typeof vi.fn>;
   let auth: AuthService;
   beforeEach(() => {
     const account = {
@@ -32,14 +36,20 @@ describe('AuthService conserva roles del access token', () => {
       .fn()
       .mockReturnValue(of({ accessToken: jwt(['Cliente']), account, scopes: ['pedidos.read'] }));
     handle = vi.fn().mockReturnValue(of(null));
+    clearCache = vi.fn().mockResolvedValue(undefined);
+    logoutRedirect = vi.fn();
+    navigateByUrl = vi.fn().mockResolvedValue(true);
     TestBed.configureTestingModule({
       providers: [
+        { provide: Router, useValue: { navigateByUrl } },
         {
           provide: MsalService,
           useValue: {
             handleRedirectObservable: handle,
             acquireTokenSilent: acquire,
+            logoutRedirect,
             instance: {
+              clearCache,
               getActiveAccount: () => account,
               getAllAccounts: () => [account],
               setActiveAccount: vi.fn(),
@@ -65,5 +75,14 @@ describe('AuthService conserva roles del access token', () => {
     acquire.mockReturnValue(of({ accessToken: jwt(['Cliente', 'Admin']), scopes: [] }));
     await auth.ensureSession();
     expect(auth.displayRole()).toBe('Admin');
+  });
+  it('cierra solo la sesión local y vuelve a Login', async () => {
+    await auth.ensureSession();
+    await auth.logout();
+    expect(clearCache).toHaveBeenCalledOnce();
+    expect(logoutRedirect).not.toHaveBeenCalled();
+    expect(auth.isAuthenticated()).toBe(false);
+    expect(auth.claims()).toEqual({});
+    expect(navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
   });
 });

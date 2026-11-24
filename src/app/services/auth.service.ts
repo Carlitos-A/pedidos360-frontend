@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { MsalBroadcastService, MsalService } from '@azure/msal-angular';
+import { Router } from '@angular/router';
 import { AuthenticationResult, EventType } from '@azure/msal-browser';
 import { Observable, firstValueFrom, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,6 +10,7 @@ import { AppRole, decodeJwtPayload, tokenRoles } from '../core/auth/jwt';
 export class AuthService {
   private readonly msal = inject(MsalService);
   private readonly broadcast = inject(MsalBroadcastService);
+  private readonly router = inject(Router);
   private initialization?: Promise<void>;
   private session?: Promise<void>;
   private redirecting = false;
@@ -108,7 +110,10 @@ export class AuthService {
   }
   async logout(): Promise<void> {
     try {
-      await firstValueFrom(this.msal.logoutRedirect());
+      await this.msal.instance.clearCache();
+      this.clearSession();
+      this.error.set('');
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
     } catch {
       this.error.set('No se pudo cerrar sesión. Inténtalo nuevamente.');
     }
