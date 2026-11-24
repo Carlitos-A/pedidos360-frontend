@@ -244,4 +244,35 @@
       }
     </section>
   </div>
+  @if (!isNew() && order()) {
+    <section class="card" style="margin-top: 1rem">
+      <div class="section-heading">
+        <div>
+          <h2>Ticket del pedido</h2>
+          <p class="muted">Comprobante interno generado al crear el pedido.</p>
+        </div>
+        <button type="button" class="secondary compact" [disabled]="ticketLoading()" (click)="loadTicket()">
+          {{ ticketLoading() ? 'Consultando…' : 'Consultar ticket' }}
+        </button>
+      </div>
+      @if (ticketError()) {
+        <p class="error" role="alert">{{ ticketError() }}</p>
+      }
+      @if (ticket(); as receipt) {
+        <p><strong>{{ receipt.ticketNumber }}</strong> · Emitido {{ receipt.issuedAt | localDate: true }}</p>
+        <p class="muted">{{ receipt.customerName }} · Pedido #{{ receipt.orderId }}</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th></tr></thead>
+            <tbody>
+              @for (item of receipt.items; track item.productId) {
+                <tr><td>{{ item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.unitPrice | clp }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Total: {{ receipt.total | clp }}</strong></p>
+      }
+    </section>
+  }
 </app-load-state>

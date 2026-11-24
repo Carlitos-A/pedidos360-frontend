@@ -15,7 +15,8 @@ import { Subscription } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CustomersService, CustomerOption } from '../../services/customers.service';
 import { ProductsService } from '../../services/products.service';
-import { Product, OrderItem } from '../../core/models/api.models';
+import { Product, OrderItem, OrderTicket } from '../../core/models/api.models';
+import { OrderWorkService } from '../../services/order-work.service';
 
 @Component({
   selector: 'app-order-detail',
@@ -34,6 +35,7 @@ export class OrderDetailComponent implements OnInit {
   private readonly service = inject(OrdersService);
   private readonly customers = inject(CustomersService);
   private readonly products = inject(ProductsService);
+  private readonly orderWork = inject(OrderWorkService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -43,6 +45,9 @@ export class OrderDetailComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal('');
   readonly success = signal('');
+  readonly ticket = signal<OrderTicket | null>(null);
+  readonly ticketLoading = signal(false);
+  readonly ticketError = signal('');
   readonly customerOptions = signal<CustomerOption[]>([]);
   readonly customerError = signal('');
   readonly customerLoading = signal(false);
@@ -63,12 +68,17 @@ export class OrderDetailComponent implements OnInit {
   private id = '';
   private request?: Subscription;
   private catalogRequest?: Subscription;
+  private ticketRequest?: Subscription;
   private createRequestId = crypto.randomUUID();
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.request?.unsubscribe();
       this.catalogRequest?.unsubscribe();
+      this.ticketRequest?.unsubscribe();
       this.loading.set(false);
+      this.ticketLoading.set(false);
+      this.ticket.set(null);
+      this.ticketError.set('');
       this.id = params.get('id') ?? '';
       this.isNew.set(!this.id);
       this.order.set(null);
@@ -138,6 +148,25 @@ export class OrderDetailComponent implements OnInit {
           this.loading.set(false);
         },
       });
+  }
+  loadTicket(): void {
+    if (!this.id || this.ticketLoading()) return;
+    this.ticketRequest?.unsubscribe();
+    this.ticketLoading.set(true);
+    this.ticketError.set('');
+    this.ticketRequest = this.orderWork.ticket(this.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (ticket) => {
+        this.ticket.set(ticket);
+        this.ticketLoading.set(false);
+      },
+      error: (error) => {
+        this.ticket.set(null);
+        this.ticketLoading.set(false);
+        this.ticketError.set(error instanceof HttpErrorResponse && error.status === 404
+          ? 'No hay un ticket disponible para este pedido.'
+          : describeError(error));
+      },
+    });
   }
   addItem(): void {
     if (this.isTerminal()) return;
